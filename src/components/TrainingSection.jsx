@@ -1,19 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { trainingPlan, focusColors, coachNotes } from '../data/training';
 import { useWeekTracker, getPhaseForWeek } from '../hooks/useWeekTracker';
 import { useWorkoutLog } from '../hooks/useWorkoutLog';
 import WeekBanner from './WeekBanner';
 import RestTimer from './RestTimer';
 
-function ExerciseRow({ ex, exIndex, phase, week, phaseIndex, dayIndex, log }) {
+function ExerciseRow({ ex, exIndex, phase, week, phaseIndex, dayIndex, log, isBrowsing }) {
   const { getEntry, toggleDone, updateEntry } = log;
-  const entry = week ? getEntry(week, phaseIndex, dayIndex, exIndex) : null;
+  const entry = (week && !isBrowsing) ? getEntry(week, phaseIndex, dayIndex, exIndex) : null;
   const [editing, setEditing] = useState(false);
 
   return (
     <div className={`ex-row${entry?.done ? ' ex-row--done' : ''}`}>
-      {/* Checkbox */}
-      {week && (
+      {week && !isBrowsing && (
         <button
           className={`ex-check${entry?.done ? ' ex-check--done' : ''}`}
           onClick={() => toggleDone(week, phaseIndex, dayIndex, exIndex)}
@@ -27,8 +26,7 @@ function ExerciseRow({ ex, exIndex, phase, week, phaseIndex, dayIndex, log }) {
       <div className="ex-sets" style={{ color: phase.color }}>{ex.sets}</div>
       <div className="ex-reps">{ex.reps}</div>
 
-      {/* Log weight/reps inline */}
-      {week && (
+      {week && !isBrowsing ? (
         <div className="ex-log">
           {editing ? (
             <div className="ex-log-inputs">
@@ -47,34 +45,47 @@ function ExerciseRow({ ex, exIndex, phase, week, phaseIndex, dayIndex, log }) {
               <button className="ex-log-save" onClick={() => setEditing(false)}>✓</button>
             </div>
           ) : (
-            <button
-              className="ex-log-btn"
-              onClick={() => setEditing(true)}
-            >
+            <button className="ex-log-btn" onClick={() => setEditing(true)}>
               {entry?.weight ? `${entry.weight}kg · ${entry.reps}` : '+ log'}
             </button>
           )}
         </div>
+      ) : (
+        <div className="ex-note">{ex.note}</div>
       )}
-
-      {!week && <div className="ex-note">{ex.note}</div>}
     </div>
   );
 }
 
 export default function TrainingSection() {
-  const { currentWeek, currentPhase, startPlan, resetPlan } = useWeekTracker();
+  const { currentWeek, currentPhase, startPlan, completeWeek, resetPlan } = useWeekTracker();
   const log = useWorkoutLog();
   const [showTimer, setShowTimer] = useState(false);
-
-  const [activePhase, setActivePhase] = useState(() =>
-    currentPhase != null ? currentPhase : 0
-  );
+  const [activePhase, setActivePhase] = useState(() => currentPhase ?? 0);
   const [activeDay, setActiveDay] = useState(0);
+
+  // Sync active phase when week advances to a new phase
+  useEffect(() => {
+    if (currentPhase != null) {
+      setActivePhase(currentPhase);
+      setActiveDay(0);
+    }
+  }, [currentPhase]);
 
   const phase = trainingPlan.phases[activePhase];
   const day = phase.days[activeDay];
-  const dayComplete = currentWeek
+
+  // Browsing a phase that isn't your current one
+  const isBrowsing = currentPhase != null && activePhase !== currentPhase;
+
+  // All 6 days complete for current week in the current phase
+  const allDaysComplete = currentWeek != null && !isBrowsing
+    ? trainingPlan.phases[currentPhase].days.every((d, i) =>
+        log.isDayComplete(currentWeek, currentPhase, i, d.exercises.length)
+      )
+    : false;
+
+  const dayComplete = currentWeek && !isBrowsing
     ? log.isDayComplete(currentWeek, activePhase, activeDay, day.exercises.length)
     : false;
 
@@ -83,35 +94,69 @@ export default function TrainingSection() {
     setActiveDay(0);
   }
 
+  // Phase status relative to current progress
+  function phaseStatus(i) {
+    if (currentPhase == null) return 'idle';
+    if (i < currentPhase) return 'done';
+    if (i === currentPhase) return 'current';
+    return 'upcoming';
+  }
+
   return (
     <div className="section-content">
-      {/* Week banner */}
       <div style={{ padding: '12px 16px', background: 'var(--bg-deep)' }}>
         <WeekBanner
           currentWeek={currentWeek}
           currentPhase={currentPhase}
+          allDaysComplete={allDaysComplete}
           onStart={startPlan}
-          onReset={() => { if (confirm('Reset plan? All workout logs will be cleared.')) { resetPlan(); log.clearLog(); } }}
+          onCompleteWeek={completeWeek}
+          onReset={() => {
+            if (confirm('Reset plan? All workout logs will be cleared.')) {
+              resetPlan();
+              log.clearLog();
+            }
+          }}
         />
       </div>
 
       {/* Phase tabs */}
       <div className="phase-tabs">
-        {trainingPlan.phases.map((p, i) => (
-          <button
-            key={p.name}
-            className="phase-tab"
-            onClick={() => handlePhase(i)}
-            style={{
-              background: activePhase === i ? p.color : 'var(--bg-card)',
-              color: activePhase === i ? '#000' : 'var(--text-dim)',
-            }}
-          >
-            <div>{p.name}</div>
-            <div className="phase-tab-weeks">{p.weeks}</div>
-          </button>
-        ))}
+        {trainingPlan.phases.map((p, i) => {
+          const status = phaseStatus(i);
+          return (
+            <button
+              key={p.name}
+              className={`phase-tab phase-tab--${status}`}
+              onClick={() => handlePhase(i)}
+              style={{
+                background: activePhase === i ? p.color : 'var(--bg-card)',
+                color: activePhase === i ? '#000' : status === 'upcoming' ? 'var(--text-faint)' : 'var(--text-dim)',
+                opacity: status === 'upcoming' ? 0.6 : 1,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                {status === 'done' && <span style={{ fontSize: 10 }}>✓</span>}
+                {status === 'current' && activePhase !== i && <span style={{ fontSize: 8, color: p.color }}>●</span>}
+                {p.name}
+              </div>
+              <div className="phase-tab-weeks">
+                {status === 'current' ? `WK ${currentWeek}` : p.weeks}
+              </div>
+            </button>
+          );
+        })}
       </div>
+
+      {/* Browsing banner */}
+      {isBrowsing && (
+        <div className="browsing-banner">
+          <span>BROWSING {trainingPlan.phases[activePhase].name}</span>
+          <button onClick={() => { setActivePhase(currentPhase); setActiveDay(0); }}>
+            ← Back to Week {currentWeek}
+          </button>
+        </div>
+      )}
 
       {/* Phase label */}
       <div className="phase-label-wrap">
@@ -122,7 +167,7 @@ export default function TrainingSection() {
       {/* Day tabs */}
       <div className="day-tabs">
         {phase.days.map((d, i) => {
-          const complete = currentWeek
+          const complete = !isBrowsing && currentWeek
             ? log.isDayComplete(currentWeek, activePhase, i, d.exercises.length)
             : false;
           return (
@@ -169,18 +214,17 @@ export default function TrainingSection() {
           </div>
         </div>
 
-        {/* Rest timer button */}
         <button className="rest-timer-trigger" onClick={() => setShowTimer(true)}>
           ⏱ Rest Timer
         </button>
 
         <div className="exercise-table">
-          <div className={`exercise-table-header${currentWeek ? ' exercise-table-header--tracked' : ''}`}>
-            {currentWeek && <div />}
+          <div className={`exercise-table-header${(currentWeek && !isBrowsing) ? ' exercise-table-header--tracked' : ''}`}>
+            {currentWeek && !isBrowsing && <div />}
             <div>EXERCISE</div>
             <div style={{ textAlign: 'center' }}>SETS</div>
             <div style={{ textAlign: 'center' }}>REPS/DUR</div>
-            <div style={{ textAlign: 'right' }}>{currentWeek ? 'LOG' : 'NOTE'}</div>
+            <div style={{ textAlign: 'right' }}>{(currentWeek && !isBrowsing) ? 'LOG' : 'NOTE'}</div>
           </div>
           <div>
             {day.exercises.map((ex, i) => (
@@ -193,6 +237,7 @@ export default function TrainingSection() {
                 phaseIndex={activePhase}
                 dayIndex={activeDay}
                 log={log}
+                isBrowsing={isBrowsing}
               />
             ))}
           </div>

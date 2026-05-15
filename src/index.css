@@ -419,6 +419,33 @@ body {
 }
 
 /* ═══ WEEK BANNER ═══ */
+/* ═══ BROWSING BANNER ═══ */
+.browsing-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #F59E0B18;
+  border-bottom: 1px solid #F59E0B40;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  color: #F59E0B;
+}
+.browsing-banner button {
+  background: none;
+  border: 1px solid #F59E0B60;
+  border-radius: 100px;
+  color: #F59E0B;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.browsing-banner button:hover { background: #F59E0B20; }
+
 .week-banner {
   background: var(--bg-card);
   border-radius: 10px;

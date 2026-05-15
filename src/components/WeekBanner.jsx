@@ -1,7 +1,7 @@
 import { TOTAL_WEEKS } from '../hooks/useWeekTracker';
 import { trainingPlan } from '../data/training';
 
-export default function WeekBanner({ currentWeek, currentPhase, onStart, onReset }) {
+export default function WeekBanner({ currentWeek, currentPhase, allDaysComplete, onStart, onReset, onCompleteWeek }) {
   if (!currentWeek) {
     return (
       <div className="week-banner week-banner--idle">
@@ -13,6 +13,7 @@ export default function WeekBanner({ currentWeek, currentPhase, onStart, onReset
 
   const phase = trainingPlan.phases[currentPhase];
   const pct = Math.round((currentWeek / TOTAL_WEEKS) * 100);
+  const isLastWeek = currentWeek === TOTAL_WEEKS;
 
   return (
     <div className="week-banner" style={{ borderLeftColor: phase.color }}>
@@ -21,7 +22,19 @@ export default function WeekBanner({ currentWeek, currentPhase, onStart, onReset
           <div className="week-banner-week" style={{ color: phase.color }}>WEEK {currentWeek}</div>
           <div className="week-banner-phase">{phase.name} — {phase.label}</div>
         </div>
-        <button className="week-banner-reset" onClick={onReset} title="Reset plan">↺</button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {allDaysComplete && !isLastWeek && (
+            <button className="week-banner-btn" onClick={onCompleteWeek}>
+              NEXT WEEK →
+            </button>
+          )}
+          {allDaysComplete && isLastWeek && (
+            <span className="badge" style={{ color: '#5BF0A5', background: '#5BF0A520', border: '1px solid #5BF0A540' }}>
+              PLAN COMPLETE 🏆
+            </span>
+          )}
+          <button className="week-banner-reset" onClick={onReset} title="Reset plan">↺</button>
+        </div>
       </div>
       <div className="week-progress-track">
         <div
