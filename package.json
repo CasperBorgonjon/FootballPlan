@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://Casper.github.io/FootballPlanApp",
+  "homepage": "https://CasperBorgonjon.github.io/FootballPlan",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
