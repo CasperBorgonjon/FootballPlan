@@ -33,20 +33,20 @@ export function useWorkoutLog(userId, planId = 'default') {
 
   async function updateEntry(week, phase, day, exIdx, fields) {
     const key = k(week, phase, day, exIdx);
-    let next;
-    setLog((prev) => {
-      next = { ...(prev[key] || EMPTY), ...fields };
-      return { ...prev, [key]: next };
-    });
+    const next = { ...(log[key] || EMPTY), ...fields };
+    setLog((prev) => ({ ...prev, [key]: next }));
 
-    await supabase.from('workout_log').upsert({
-      user_id: userId,
-      log_key: key,
-      done: next.done,
-      weight: next.weight,
-      reps: next.reps,
-      updated_at: new Date().toISOString(),
-    });
+    await supabase.from('workout_log').upsert(
+      {
+        user_id: userId,
+        log_key: key,
+        done: next.done,
+        weight: next.weight,
+        reps: next.reps,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,log_key' }
+    );
   }
 
   function toggleDone(week, phase, day, exIdx) {

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp \"/tmp/proto/Desktop _ 1280_lite.html\" \"C:/Users/borgo/Dev/personal/sideprojects/FootballPlanApp/.proto_desktop.html\")",
+      "Bash(cp \"/tmp/proto/Tablet _ 900_lite.html\" \"C:/Users/borgo/Dev/personal/sideprojects/FootballPlanApp/.proto_tablet.html\")",
+      "Bash(cp \"/tmp/proto/Mobile _ 390_lite.html\" \"C:/Users/borgo/Dev/personal/sideprojects/FootballPlanApp/.proto_mobile.html\")"
+    ]
+  }
+}

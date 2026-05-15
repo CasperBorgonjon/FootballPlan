@@ -63,24 +63,24 @@ export default function RestTimer({ onClose, intervals = null }) {
     <div className="timer-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="timer-modal">
         <div className="timer-header">
-          <span className="timer-title">{isInterval ? 'INTERVAL TIMER' : 'REST TIMER'}</span>
+          <span className="timer-title">{isInterval ? 'Interval Timer' : 'Rest Timer'}</span>
           <button className="timer-close" onClick={onClose}>✕</button>
         </div>
 
         {currentLabel && (
-          <div style={{ textAlign: 'center', color: 'var(--text-sub)', fontSize: 12, letterSpacing: 1 }}>
-            {currentLabel.toUpperCase()} · {intervalIdx + 1}/{intervals.length}
+          <div style={{ textAlign: 'center', color: 'var(--ink-55)', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600 }}>
+            {currentLabel} · {intervalIdx + 1}/{intervals.length}
           </div>
         )}
 
         <div className="timer-circle-wrap">
-          <svg width="140" height="140" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="54" fill="none" stroke="var(--bg-row)" strokeWidth="6" />
+          <svg width="160" height="160" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="54" fill="none" stroke="var(--ink-08)" strokeWidth="4" />
             <circle
               cx="60" cy="60" r="54"
               fill="none"
-              stroke={isDone ? '#F87171' : '#5BF0A5'}
-              strokeWidth="6"
+              stroke={isDone ? 'var(--danger)' : 'var(--accent)'}
+              strokeWidth="4"
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={circumference * (1 - progress)}
@@ -88,7 +88,7 @@ export default function RestTimer({ onClose, intervals = null }) {
               style={{ transition: 'stroke-dashoffset 1s linear, stroke .3s' }}
             />
           </svg>
-          <div className="timer-time" style={{ color: isDone ? '#F87171' : 'var(--text)' }}>
+          <div className="timer-time" style={{ color: isDone ? 'var(--danger)' : 'var(--ink)' }}>
             {isDone ? 'GO!' : `${mins}:${secs}`}
           </div>
         </div>
@@ -98,12 +98,8 @@ export default function RestTimer({ onClose, intervals = null }) {
             {PRESETS.map((s) => (
               <button
                 key={s}
-                className="timer-preset-btn"
+                className={`timer-preset-btn${selected === s ? ' is-active' : ''}`}
                 onClick={() => setSelected(s)}
-                style={{
-                  background: selected === s ? '#5BF0A5' : 'var(--bg-row)',
-                  color: selected === s ? '#000' : 'var(--text-sub)',
-                }}
               >
                 {s < 60 ? `${s}s` : `${s / 60}m`}
               </button>

@@ -8,7 +8,6 @@ export default function MainNav({ sections, active, onSelect, variant }) {
           key={s.id}
           className={active === s.id ? 'active' : ''}
           onClick={() => onSelect(s.id)}
-          style={isBottom ? { '--accent': s.accent } : undefined}
         >
           {isBottom ? (
             <>

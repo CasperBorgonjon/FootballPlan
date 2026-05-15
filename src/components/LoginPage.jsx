@@ -22,20 +22,11 @@ export default function LoginPage() {
         return;
       }
       const { error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        setError(error.message);
-      } else {
-        setSuccess('Account created! You are now signed in.');
-      }
+      if (error) setError(error.message);
+      else setSuccess('Account created! You are now signed in.');
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        if (error.message.includes('Invalid login')) {
-          setError('Wrong email or password.');
-        } else {
-          setError(error.message);
-        }
-      }
+      if (error) setError(error.message.includes('Invalid login') ? 'Wrong email or password.' : error.message);
     }
 
     setLoading(false);
@@ -44,13 +35,10 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <div className="login-header">
-          <div className="login-eyebrow">FULLBACK · OFF-SEASON</div>
-          <div className="login-title">
-            SOCCER<br />
-            <span style={{ color: '#5BF0A5' }}>COMPLETE PLAN</span>
-          </div>
-        </div>
+        <div className="login-eyebrow">Fullback · Off-Season</div>
+        <h1 className="login-title">
+          Soccer — <em>complete plan</em>
+        </h1>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="login-toggle">
@@ -99,7 +87,7 @@ export default function LoginPage() {
           )}
 
           <button className="login-btn" type="submit" disabled={loading}>
-            {loading ? '...' : isSignUp ? 'CREATE ACCOUNT' : 'SIGN IN'}
+            {loading ? '…' : isSignUp ? 'Create Account' : 'Sign In'}
           </button>
 
           {isSignUp && !success && (

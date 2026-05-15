@@ -2,48 +2,20 @@ import { useState } from 'react';
 import { nutritionData } from '../data/nutrition';
 import Pill from './ui/Pill';
 
-const TRAINING_ACCENT = '#5BF0A5';
-
-function MacroStrip({ macros }) {
-  return (
-    <div className="macro-strip">
-      {macros.map((m) => (
-        <div key={m.l} className="macro-item">
-          <div className="macro-value" style={{ color: m.c }}>
-            {m.v}<span className="macro-unit">{m.u}</span>
-          </div>
-          <div className="macro-label">{m.l.toUpperCase()}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function FoodSection({ sec, catColor }) {
+function FoodSection({ sec }) {
   const isAvoid = sec.name.includes('Avoid');
   return (
-    <div>
-      <div className="block-header">
-        <div
-          className="block-header-name"
-          style={{ color: isAvoid ? '#F87171' : 'var(--text-dim)' }}
-        >
-          {isAvoid ? '⚠ ' : ''}{sec.name.toUpperCase()}
+    <div className="food-section">
+      <div className="food-section-head">
+        <div className={`food-section-name${isAvoid ? ' is-avoid' : ''}`}>
+          {isAvoid ? '⚠ ' : ''}{sec.name}
         </div>
-        <div className="block-header-count">{sec.items.length} options</div>
+        <div className="food-section-count">{sec.items.length} options</div>
       </div>
       {sec.items.map((item) => (
-        <div key={item} className="food-item">
-          <div
-            className="food-dot"
-            style={{ background: isAvoid ? '#F87171' : catColor }}
-          />
-          <div
-            className="food-item-text"
-            style={{ color: isAvoid ? 'var(--text-sub)' : 'var(--text)' }}
-          >
-            {item}
-          </div>
+        <div key={item} className={`food-item${isAvoid ? ' is-avoid' : ''}`}>
+          <div className="food-item-dot" />
+          <div>{item}</div>
         </div>
       ))}
     </div>
@@ -64,48 +36,68 @@ export default function NutritionSection() {
 
   return (
     <div className="section-content">
-      {/* Day type toggle */}
-      <div className="food-toggle-wrap">
-        <Pill active={foodDay === 'training'} color={TRAINING_ACCENT} onClick={() => handleFoodDay('training')}>
+      <div className="metabar">
+        <div className="metabar-left">
+          <span className="metabar-tag">NUTRITION</span>
+          <span className="metabar-dot">·</span>
+          <span>Performance fueling</span>
+        </div>
+        <div className="metabar-right">{foodDay === 'training' ? 'TRAINING DAY' : 'REST DAY'}</div>
+      </div>
+
+      <div className="hero">
+        <div>
+          <div className="hero-eyebrow">Soccer · Nutrition Guide</div>
+          <h1 className="hero-title">
+            Fuel — <em>{foodDay === 'training' ? 'training day' : 'rest day'}</em>
+          </h1>
+          <div className="hero-sub">Macros below are tuned for a 6-day off-season block.</div>
+        </div>
+      </div>
+
+      <div className="nutrition-toggle">
+        <Pill active={foodDay === 'training'} onClick={() => handleFoodDay('training')}>
           ⚡ Training Day
         </Pill>
-        <Pill active={foodDay === 'rest'} color={TRAINING_ACCENT} onClick={() => handleFoodDay('rest')}>
+        <Pill active={foodDay === 'rest'} onClick={() => handleFoodDay('rest')}>
           😴 Rest Day
         </Pill>
       </div>
 
-      <MacroStrip macros={data.macros} />
-
-      <div className="meal-cards">
-        {/* Category pills */}
-        <div className="cat-pills">
-          {data.categories.map((c) => (
-            <Pill key={c.id} active={activeCat === c.id} color={c.color} onClick={() => setActiveCat(c.id)}>
-              {c.icon} {c.label}
-            </Pill>
-          ))}
-        </div>
-
-        {/* Active category card */}
-        <div className="section-block" style={{ borderLeft: `4px solid ${cat.color}` }}>
-          <div className="cat-card-header">
-            <div>
-              <div className="cat-card-title">{cat.label}</div>
-              <div className="cat-card-sub" style={{ color: cat.color }}>
-                {cat.time} · {cat.goal}
-              </div>
+      <div className="macro-strip">
+        {data.macros.map((m) => (
+          <div key={m.l} className="macro-item">
+            <div className="macro-label">{m.l}</div>
+            <div className="macro-value">
+              {m.v}<span className="macro-unit">{m.u}</span>
             </div>
-            <div className="cat-card-icon">{cat.icon}</div>
           </div>
-          {cat.sections.map((sec) => (
-            <FoodSection key={sec.name} sec={sec} catColor={cat.color} />
-          ))}
-        </div>
+        ))}
       </div>
 
-      {/* Principles */}
-      <div className="principles-wrap">
-        <div className="principles-heading">CORE PRINCIPLES</div>
+      <div className="cat-pills">
+        {data.categories.map((c) => (
+          <Pill key={c.id} active={activeCat === c.id} onClick={() => setActiveCat(c.id)}>
+            {c.icon} {c.label}
+          </Pill>
+        ))}
+      </div>
+
+      <div className="cat-card">
+        <div className="cat-card-head">
+          <div>
+            <div className="cat-card-title">{cat.label}</div>
+            <div className="cat-card-sub">{cat.time} · {cat.goal}</div>
+          </div>
+          <div className="cat-card-icon">{cat.icon}</div>
+        </div>
+        {cat.sections.map((sec) => (
+          <FoodSection key={sec.name} sec={sec} />
+        ))}
+      </div>
+
+      <div className="principles">
+        <div className="principles-heading">Core Principles</div>
         <div className="principles-grid">
           {[
             { icon: '🔄', title: 'Carb Cycle', text: 'High carbs on hard days. Cut ~40% on rest days. Protein stays constant.' },
