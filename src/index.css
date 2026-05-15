@@ -1,0 +1,387 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Theme variables ── */
+:root {
+  --bg:        #0B0E14;
+  --bg-deep:   #05070A;
+  --bg-card:   #12161F;
+  --bg-row:    #1A1F2B;
+  --bg-hover:  #242B3D;
+  --border:    #2D3548;
+  --border2:   #3D465C;
+  --text:      #FFFFFF;
+  --text-mid:  #E2E8F0;
+  --text-dim:  #CBD5E1;
+  --text-mute: #94A3B8;
+  --text-faint:#64748B;
+  --text-sub:  #F1F5F9;
+  --thumb:     #334155;
+}
+
+body.light {
+  --bg:        #F8FAFC;
+  --bg-deep:   #F1F5F9;
+  --bg-card:   #FFFFFF;
+  --bg-row:    #F8FAFC;
+  --bg-hover:  #F1F5F9;
+  --border:    #E2E8F0;
+  --border2:   #CBD5E1;
+  --text:      #0F172A;
+  --text-mid:  #1E293B;
+  --text-dim:  #334155;
+  --text-mute: #475569;
+  --text-faint:#64748B;
+  --text-sub:  #0F172A;
+  --thumb:     #CBD5E1;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background .3s, color .3s;
+}
+
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-thumb { background: var(--thumb); }
+
+/* ── Header ── */
+#main-header {
+  background: var(--bg-deep);
+  padding: 20px 16px 0;
+}
+.header-eyebrow {
+  font-size: 10px;
+  color: var(--text-mute);
+  letter-spacing: 0.2em;
+  margin-bottom: 6px;
+}
+.header-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+/* ── Nav ── */
+.main-nav {
+  display: flex;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border);
+}
+.main-nav button {
+  flex: 1;
+  padding: 14px 8px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .2s;
+  border-bottom: 2px solid transparent;
+}
+.main-nav button.active { color: var(--text); border-bottom-color: #5BF0A5; }
+.main-nav button:hover:not(.active) { color: var(--text-mid); }
+
+/* ── Theme toggle ── */
+#theme-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s;
+}
+#theme-toggle:hover { transform: scale(1.1); }
+
+/* ── Section animation ── */
+.section-content { animation: fadeUp .25s ease; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══ TRAINING ═══ */
+.phase-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 14px 16px;
+  background: var(--bg-deep);
+  overflow-x: auto;
+}
+.phase-tab {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  border-radius: 3px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  transition: all .18s;
+}
+.phase-tab-weeks { font-size: 10px; font-weight: 400; opacity: .7; margin-top: 2px; }
+
+.phase-label-wrap {
+  padding: 10px 16px 4px;
+  background: var(--bg-deep);
+  font-size: 13px;
+}
+.phase-desc { color: var(--text-mute); margin-left: 6px; }
+
+.day-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--bg-card);
+}
+.day-tab {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  color: var(--text-sub);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.day-tab:hover { background: var(--bg-card); }
+
+.day-content { padding: 16px; }
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.day-label { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.04em; }
+.day-sub { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+
+.badge {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border-radius: 100px;
+}
+
+.exercise-table {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.exercise-table-header {
+  display: grid;
+  grid-template-columns: 1fr 52px 72px 90px;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  background: var(--bg-deep);
+  color: var(--text-mute);
+}
+.ex-row {
+  display: grid;
+  grid-template-columns: 1fr 52px 72px 90px;
+  gap: 8px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--bg-row);
+  align-items: center;
+  transition: background .12s;
+}
+.ex-row--last { border-bottom: none; }
+.ex-row:hover { background: var(--bg-hover); }
+.ex-name { font-weight: 500; font-size: 14px; }
+.ex-sets { text-align: center; font-weight: 700; font-size: 16px; }
+.ex-reps { text-align: center; color: var(--text-sub); font-size: 13px; }
+.ex-note { text-align: right; color: var(--text-mute); font-size: 11px; }
+
+.coach-note {
+  margin-top: 14px;
+  padding: 13px 16px;
+  border-radius: 8px;
+  border-left: 3px solid #5BF0A5;
+  background: var(--bg-card);
+}
+.coach-note-label {
+  font-size: 10px;
+  color: var(--text-mute);
+  letter-spacing: .1em;
+  margin-bottom: 5px;
+  font-weight: 700;
+}
+.coach-note-text { font-size: 13px; color: var(--text-sub); line-height: 1.6; }
+
+.footer-bar {
+  padding: 4px 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+}
+
+/* ═══ NUTRITION ═══ */
+.food-toggle-wrap {
+  padding: 14px 16px;
+  display: flex;
+  gap: 8px;
+  background: var(--bg-deep);
+}
+.food-pill {
+  flex-shrink: 0;
+  padding: 7px 16px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  transition: all .18s;
+}
+.macro-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 3px solid #5BF0A5;
+  padding: 12px 16px 14px;
+  gap: 4px;
+  background: var(--bg-deep);
+}
+.macro-item { text-align: center; }
+.macro-value { font-size: 18px; font-weight: 600; }
+.macro-unit { font-size: 10px; margin-left: 2px; }
+.macro-label { font-size: 9px; color: var(--text-mute); letter-spacing: .1em; margin-top: 2px; }
+
+.meal-cards { padding: 14px 16px; }
+.cat-pills { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 14px; padding-bottom: 2px; }
+
+.section-block {
+  background: var(--bg-card);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.cat-card-header {
+  padding: 14px 16px;
+  background: var(--bg-row);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+.cat-card-title { font-size: 17px; font-weight: 600; }
+.cat-card-sub { font-size: 11px; margin-top: 2px; letter-spacing: .06em; }
+.cat-card-icon { font-size: 26px; }
+
+.block-header {
+  padding: 10px 16px;
+  background: var(--bg-row);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.block-header-name { font-size: 10px; font-weight: 700; letter-spacing: .1em; }
+.block-header-count { font-size: 10px; color: var(--text-mute); }
+
+.food-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--bg-row);
+  transition: background .12s;
+}
+.food-item:hover { background: var(--bg-hover); }
+.food-item:last-child { border-bottom: none; }
+.food-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.food-item-text { font-size: 13px; }
+
+.principles-wrap { padding: 0 16px 32px; }
+.principles-heading { font-size: 10px; color: var(--text-mute); letter-spacing: .15em; margin-bottom: 10px; }
+.principles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.principle-card { background: var(--bg-card); border-radius: 10px; padding: 14px; }
+.principle-icon { font-size: 20px; margin-bottom: 6px; }
+.principle-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.principle-text { font-size: 11px; line-height: 1.5; color: var(--text-sub); }
+
+/* ═══ RECOVERY ═══ */
+.rec-tabs-wrap {
+  overflow-x: auto;
+  padding: 14px 16px;
+  background: var(--bg-deep);
+  display: flex;
+  gap: 8px;
+}
+.rec-tab {
+  flex-shrink: 0;
+  padding: 7px 16px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  transition: all .18s;
+}
+
+.rec-content { padding: 14px 16px; }
+.rec-intro {
+  background: var(--bg-card);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.rec-intro-tag { font-size: 11px; letter-spacing: .1em; margin-bottom: 4px; }
+.rec-intro-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.rec-intro-sub { font-size: 13px; color: var(--text-sub); line-height: 1.5; font-style: italic; }
+
+.rec-card { background: var(--bg-card); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
+.rec-card-head {
+  padding: 13px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--bg-row);
+}
+.rec-card-title { font-size: 15px; font-weight: 600; }
+
+.rec-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--bg-row);
+  transition: background .12s;
+}
+.rec-item--last { border-bottom: none; }
+.rec-item:hover { background: var(--bg-hover); }
+.rec-item-label { min-width: 100px; font-size: 12px; font-weight: 600; flex-shrink: 0; padding-top: 1px; }
+.rec-item-desc { font-size: 13px; color: var(--text-sub); line-height: 1.5; }
+
+.rec-footer { padding: 8px 0 20px; text-align: center; font-size: 10px; color: var(--text-faint); letter-spacing: .12em; }
