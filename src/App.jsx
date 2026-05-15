@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { supabase } from './lib/supabase';
 import TrainingSection from './components/TrainingSection';
 import NutritionSection from './components/NutritionSection';
 import RecoverySection from './components/RecoverySection';
+import LoginPage from './components/LoginPage';
 
 const SECTIONS = [
   { id: 'training', label: 'Training', icon: '⚽' },
@@ -9,19 +12,11 @@ const SECTIONS = [
   { id: 'recovery', label: 'Recovery', icon: '🔋' },
 ];
 
-const accentMap = {
-  training: '#5BF0A5',
-  food: '#F59E0B',
-  recovery: '#A78BFA',
-};
+const accentMap = { training: '#5BF0A5', food: '#F59E0B', recovery: '#A78BFA' };
+const labelMap = { training: 'COMPLETE PLAN', food: 'NUTRITION GUIDE', recovery: 'RECOVERY & TRACKING' };
 
-const labelMap = {
-  training: 'COMPLETE PLAN',
-  food: 'NUTRITION GUIDE',
-  recovery: 'RECOVERY & TRACKING',
-};
-
-export default function App() {
+function AppInner() {
+  const { user, loading } = useAuth();
   const [activeSection, setActiveSection] = useState('training');
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') !== 'light');
 
@@ -29,6 +24,16 @@ export default function App() {
     document.body.classList.toggle('light', !isDark);
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
   }, [isDark]);
+
+  if (loading) {
+    return (
+      <div className="app-loading">
+        <div className="app-loading-text">LOADING...</div>
+      </div>
+    );
+  }
+
+  if (!user) return <LoginPage />;
 
   return (
     <>
@@ -40,7 +45,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Top nav — desktop only */}
       <nav className="main-nav main-nav--top">
         {SECTIONS.map((s) => (
           <button
@@ -54,12 +58,11 @@ export default function App() {
       </nav>
 
       <div className="page-content">
-        {activeSection === 'training' && <TrainingSection />}
+        {activeSection === 'training' && <TrainingSection userId={user.id} />}
         {activeSection === 'food' && <NutritionSection />}
         {activeSection === 'recovery' && <RecoverySection />}
       </div>
 
-      {/* Bottom nav — mobile only */}
       <nav className="main-nav main-nav--bottom">
         {SECTIONS.map((s) => (
           <button
@@ -77,10 +80,26 @@ export default function App() {
       <button
         id="theme-toggle"
         onClick={() => setIsDark((d) => !d)}
-        title="Toggle light/dark mode"
+        title="Toggle light/dark"
       >
         {isDark ? '🌙' : '🌑'}
       </button>
+
+      <button
+        id="sign-out-btn"
+        onClick={() => supabase.auth.signOut()}
+        title="Sign out"
+      >
+        ↩
+      </button>
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppInner />
+    </AuthProvider>
   );
 }

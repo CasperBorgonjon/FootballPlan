@@ -57,9 +57,9 @@ function ExerciseRow({ ex, exIndex, phase, week, phaseIndex, dayIndex, log, isBr
   );
 }
 
-export default function TrainingSection() {
-  const { currentWeek, currentPhase, startPlan, completeWeek, resetPlan } = useWeekTracker();
-  const log = useWorkoutLog();
+export default function TrainingSection({ userId }) {
+  const { currentWeek, currentPhase, startPlan, completeWeek, resetPlan } = useWeekTracker(userId);
+  const log = useWorkoutLog(userId);
   const [showTimer, setShowTimer] = useState(false);
   const [activePhase, setActivePhase] = useState(() => currentPhase ?? 0);
   const [activeDay, setActiveDay] = useState(0);

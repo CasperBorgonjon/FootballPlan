@@ -1,4 +1,5 @@
-import { useLocalStorage } from './useLocalStorage';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { trainingPlan } from '../data/training';
 
 export const TOTAL_WEEKS = 10;
@@ -11,22 +12,41 @@ export function getPhaseForWeek(week) {
   return trainingPlan.phases.length - 1;
 }
 
-export function useWeekTracker() {
-  const [currentWeek, setCurrentWeek] = useLocalStorage('plan_current_week', null);
+export function useWeekTracker(userId) {
+  const [currentWeek, setCurrentWeek] = useState(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase
+      .from('week_tracker')
+      .select('current_week')
+      .eq('user_id', userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        setCurrentWeek(data?.current_week ?? null);
+        setLoaded(true);
+      });
+  }, [userId]);
 
   const currentPhase = currentWeek != null ? getPhaseForWeek(currentWeek) : null;
 
-  function startPlan() {
-    setCurrentWeek(1);
+  async function startPlan() {
+    const week = 1;
+    setCurrentWeek(week);
+    await supabase.from('week_tracker').upsert({ user_id: userId, current_week: week, updated_at: new Date().toISOString() });
   }
 
-  function completeWeek() {
-    setCurrentWeek((w) => Math.min(w + 1, TOTAL_WEEKS));
+  async function completeWeek() {
+    const next = Math.min((currentWeek ?? 1) + 1, TOTAL_WEEKS);
+    setCurrentWeek(next);
+    await supabase.from('week_tracker').upsert({ user_id: userId, current_week: next, updated_at: new Date().toISOString() });
   }
 
-  function resetPlan() {
+  async function resetPlan() {
     setCurrentWeek(null);
+    await supabase.from('week_tracker').delete().eq('user_id', userId);
   }
 
-  return { currentWeek, currentPhase, startPlan, completeWeek, resetPlan };
+  return { currentWeek, currentPhase, loaded, startPlan, completeWeek, resetPlan };
 }
