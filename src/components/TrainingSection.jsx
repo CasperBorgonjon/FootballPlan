@@ -1,23 +1,82 @@
 import { useState } from 'react';
 import { trainingPlan, focusColors, coachNotes } from '../data/training';
+import { useWeekTracker, getPhaseForWeek } from '../hooks/useWeekTracker';
+import { useWorkoutLog } from '../hooks/useWorkoutLog';
+import WeekBanner from './WeekBanner';
+import RestTimer from './RestTimer';
 
-function ExerciseRow({ ex, color, isLast }) {
+function ExerciseRow({ ex, exIndex, phase, week, phaseIndex, dayIndex, log }) {
+  const { getEntry, toggleDone, updateEntry } = log;
+  const entry = week ? getEntry(week, phaseIndex, dayIndex, exIndex) : null;
+  const [editing, setEditing] = useState(false);
+
   return (
-    <div className={`ex-row${isLast ? ' ex-row--last' : ''}`}>
-      <div className="ex-name">{ex.name}</div>
-      <div className="ex-sets" style={{ color }}>{ex.sets}</div>
+    <div className={`ex-row${entry?.done ? ' ex-row--done' : ''}`}>
+      {/* Checkbox */}
+      {week && (
+        <button
+          className={`ex-check${entry?.done ? ' ex-check--done' : ''}`}
+          onClick={() => toggleDone(week, phaseIndex, dayIndex, exIndex)}
+          style={{ borderColor: entry?.done ? phase.color : 'var(--border2)' }}
+        >
+          {entry?.done && <span style={{ color: phase.color }}>✓</span>}
+        </button>
+      )}
+
+      <div className="ex-name" style={{ opacity: entry?.done ? 0.5 : 1 }}>{ex.name}</div>
+      <div className="ex-sets" style={{ color: phase.color }}>{ex.sets}</div>
       <div className="ex-reps">{ex.reps}</div>
-      <div className="ex-note">{ex.note}</div>
+
+      {/* Log weight/reps inline */}
+      {week && (
+        <div className="ex-log">
+          {editing ? (
+            <div className="ex-log-inputs">
+              <input
+                className="ex-log-input"
+                placeholder="kg"
+                value={entry?.weight || ''}
+                onChange={(e) => updateEntry(week, phaseIndex, dayIndex, exIndex, { weight: e.target.value })}
+              />
+              <input
+                className="ex-log-input"
+                placeholder="reps"
+                value={entry?.reps || ''}
+                onChange={(e) => updateEntry(week, phaseIndex, dayIndex, exIndex, { reps: e.target.value })}
+              />
+              <button className="ex-log-save" onClick={() => setEditing(false)}>✓</button>
+            </div>
+          ) : (
+            <button
+              className="ex-log-btn"
+              onClick={() => setEditing(true)}
+            >
+              {entry?.weight ? `${entry.weight}kg · ${entry.reps}` : '+ log'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {!week && <div className="ex-note">{ex.note}</div>}
     </div>
   );
 }
 
 export default function TrainingSection() {
-  const [activePhase, setActivePhase] = useState(0);
+  const { currentWeek, currentPhase, startPlan, resetPlan } = useWeekTracker();
+  const log = useWorkoutLog();
+  const [showTimer, setShowTimer] = useState(false);
+
+  const [activePhase, setActivePhase] = useState(() =>
+    currentPhase != null ? currentPhase : 0
+  );
   const [activeDay, setActiveDay] = useState(0);
 
   const phase = trainingPlan.phases[activePhase];
   const day = phase.days[activeDay];
+  const dayComplete = currentWeek
+    ? log.isDayComplete(currentWeek, activePhase, activeDay, day.exercises.length)
+    : false;
 
   function handlePhase(i) {
     setActivePhase(i);
@@ -26,6 +85,16 @@ export default function TrainingSection() {
 
   return (
     <div className="section-content">
+      {/* Week banner */}
+      <div style={{ padding: '12px 16px', background: 'var(--bg-deep)' }}>
+        <WeekBanner
+          currentWeek={currentWeek}
+          currentPhase={currentPhase}
+          onStart={startPlan}
+          onReset={() => { if (confirm('Reset plan? All workout logs will be cleared.')) { resetPlan(); log.clearLog(); } }}
+        />
+      </div>
+
       {/* Phase tabs */}
       <div className="phase-tabs">
         {trainingPlan.phases.map((p, i) => (
@@ -52,20 +121,26 @@ export default function TrainingSection() {
 
       {/* Day tabs */}
       <div className="day-tabs">
-        {phase.days.map((d, i) => (
-          <button
-            key={d.day}
-            className="day-tab"
-            onClick={() => setActiveDay(i)}
-            style={{
-              background: activeDay === i ? 'var(--bg-row)' : 'transparent',
-              borderColor: activeDay === i ? phase.color : 'var(--border2)',
-              color: activeDay === i ? 'var(--text)' : 'var(--text-sub)',
-            }}
-          >
-            {d.day}
-          </button>
-        ))}
+        {phase.days.map((d, i) => {
+          const complete = currentWeek
+            ? log.isDayComplete(currentWeek, activePhase, i, d.exercises.length)
+            : false;
+          return (
+            <button
+              key={d.day}
+              className="day-tab"
+              onClick={() => setActiveDay(i)}
+              style={{
+                background: activeDay === i ? 'var(--bg-row)' : 'transparent',
+                borderColor: activeDay === i ? phase.color : complete ? phase.color + '60' : 'var(--border2)',
+                color: activeDay === i ? 'var(--text)' : 'var(--text-sub)',
+              }}
+            >
+              {complete && <span style={{ fontSize: 8, marginRight: 3 }}>✓</span>}
+              {d.day}
+            </button>
+          );
+        })}
       </div>
 
       {/* Day content */}
@@ -75,32 +150,49 @@ export default function TrainingSection() {
             <div className="day-label">{day.label}</div>
             <div className="day-sub">{day.day} · {phase.weeks}</div>
           </div>
-          <span
-            className="badge"
-            style={{
-              color: focusColors[day.focus],
-              background: `${focusColors[day.focus]}20`,
-              border: `1px solid ${focusColors[day.focus]}40`,
-            }}
-          >
-            {day.focus.toUpperCase()}
-          </span>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {dayComplete && (
+              <span className="badge" style={{ color: phase.color, background: `${phase.color}20`, border: `1px solid ${phase.color}40` }}>
+                DONE ✓
+              </span>
+            )}
+            <span
+              className="badge"
+              style={{
+                color: focusColors[day.focus],
+                background: `${focusColors[day.focus]}20`,
+                border: `1px solid ${focusColors[day.focus]}40`,
+              }}
+            >
+              {day.focus.toUpperCase()}
+            </span>
+          </div>
         </div>
 
+        {/* Rest timer button */}
+        <button className="rest-timer-trigger" onClick={() => setShowTimer(true)}>
+          ⏱ Rest Timer
+        </button>
+
         <div className="exercise-table">
-          <div className="exercise-table-header">
+          <div className={`exercise-table-header${currentWeek ? ' exercise-table-header--tracked' : ''}`}>
+            {currentWeek && <div />}
             <div>EXERCISE</div>
             <div style={{ textAlign: 'center' }}>SETS</div>
             <div style={{ textAlign: 'center' }}>REPS/DUR</div>
-            <div style={{ textAlign: 'right' }}>NOTE</div>
+            <div style={{ textAlign: 'right' }}>{currentWeek ? 'LOG' : 'NOTE'}</div>
           </div>
           <div>
             {day.exercises.map((ex, i) => (
               <ExerciseRow
                 key={ex.name}
                 ex={ex}
-                color={phase.color}
-                isLast={i === day.exercises.length - 1}
+                exIndex={i}
+                phase={phase}
+                week={currentWeek}
+                phaseIndex={activePhase}
+                dayIndex={activeDay}
+                log={log}
               />
             ))}
           </div>
@@ -116,6 +208,8 @@ export default function TrainingSection() {
         <div>SUN = FULL REST</div>
         <div>12-WEEK BLOCK</div>
       </div>
+
+      {showTimer && <RestTimer onClose={() => setShowTimer(false)} />}
     </div>
   );
 }

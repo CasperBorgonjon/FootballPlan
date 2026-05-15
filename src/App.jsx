@@ -4,9 +4,9 @@ import NutritionSection from './components/NutritionSection';
 import RecoverySection from './components/RecoverySection';
 
 const SECTIONS = [
-  { id: 'training', label: '⚽ Training' },
-  { id: 'food', label: '🥗 Nutrition' },
-  { id: 'recovery', label: '🔋 Recovery' },
+  { id: 'training', label: 'Training', icon: '⚽' },
+  { id: 'food', label: 'Nutrition', icon: '🥗' },
+  { id: 'recovery', label: 'Recovery', icon: '🔋' },
 ];
 
 const accentMap = {
@@ -40,21 +40,39 @@ export default function App() {
         </div>
       </div>
 
-      <nav className="main-nav">
+      {/* Top nav — desktop only */}
+      <nav className="main-nav main-nav--top">
         {SECTIONS.map((s) => (
           <button
             key={s.id}
             className={activeSection === s.id ? 'active' : ''}
             onClick={() => setActiveSection(s.id)}
           >
-            {s.label}
+            {s.icon} {s.label}
           </button>
         ))}
       </nav>
 
-      {activeSection === 'training' && <TrainingSection />}
-      {activeSection === 'food' && <NutritionSection />}
-      {activeSection === 'recovery' && <RecoverySection />}
+      <div className="page-content">
+        {activeSection === 'training' && <TrainingSection />}
+        {activeSection === 'food' && <NutritionSection />}
+        {activeSection === 'recovery' && <RecoverySection />}
+      </div>
+
+      {/* Bottom nav — mobile only */}
+      <nav className="main-nav main-nav--bottom">
+        {SECTIONS.map((s) => (
+          <button
+            key={s.id}
+            className={activeSection === s.id ? 'active' : ''}
+            onClick={() => setActiveSection(s.id)}
+            style={{ '--accent': accentMap[s.id] }}
+          >
+            <span className="bottom-nav-icon">{s.icon}</span>
+            <span className="bottom-nav-label">{s.label}</span>
+          </button>
+        ))}
+      </nav>
 
       <button
         id="theme-toggle"
