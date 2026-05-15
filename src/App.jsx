@@ -5,19 +5,19 @@ import TrainingSection from './components/TrainingSection';
 import NutritionSection from './components/NutritionSection';
 import RecoverySection from './components/RecoverySection';
 import LoginPage from './components/LoginPage';
+import MainNav from './components/MainNav';
 
+// One registry — adding a section (metrics, photos, coach view) is a single
+// entry here, no if-chain edits.
 const SECTIONS = [
-  { id: 'training', label: 'Training', icon: '⚽' },
-  { id: 'food', label: 'Nutrition', icon: '🥗' },
-  { id: 'recovery', label: 'Recovery', icon: '🔋' },
+  { id: 'training', label: 'Training',  icon: '⚽', accent: '#5BF0A5', headerLabel: 'COMPLETE PLAN',     Component: TrainingSection,  needsUser: true },
+  { id: 'food',     label: 'Nutrition', icon: '🥗', accent: '#F59E0B', headerLabel: 'NUTRITION GUIDE',   Component: NutritionSection, needsUser: false },
+  { id: 'recovery', label: 'Recovery',  icon: '🔋', accent: '#A78BFA', headerLabel: 'RECOVERY & TRACKING', Component: RecoverySection,  needsUser: false },
 ];
-
-const accentMap = { training: '#5BF0A5', food: '#F59E0B', recovery: '#A78BFA' };
-const labelMap = { training: 'COMPLETE PLAN', food: 'NUTRITION GUIDE', recovery: 'RECOVERY & TRACKING' };
 
 function AppInner() {
   const { user, loading } = useAuth();
-  const [activeSection, setActiveSection] = useState('training');
+  const [activeId, setActiveId] = useState('training');
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') !== 'light');
 
   useEffect(() => {
@@ -35,47 +35,26 @@ function AppInner() {
 
   if (!user) return <LoginPage />;
 
+  const active = SECTIONS.find((s) => s.id === activeId) ?? SECTIONS[0];
+  const ActiveComponent = active.Component;
+
   return (
     <>
       <div id="main-header">
         <div className="header-eyebrow">FULLBACK · OFF-SEASON · 6 DAYS/WEEK · NO BALL WORK</div>
         <div className="header-title">
           SOCCER<br />
-          <span style={{ color: accentMap[activeSection] }}>{labelMap[activeSection]}</span>
+          <span style={{ color: active.accent }}>{active.headerLabel}</span>
         </div>
       </div>
 
-      <nav className="main-nav main-nav--top">
-        {SECTIONS.map((s) => (
-          <button
-            key={s.id}
-            className={activeSection === s.id ? 'active' : ''}
-            onClick={() => setActiveSection(s.id)}
-          >
-            {s.icon} {s.label}
-          </button>
-        ))}
-      </nav>
+      <MainNav sections={SECTIONS} active={activeId} onSelect={setActiveId} variant="top" />
 
       <div className="page-content">
-        {activeSection === 'training' && <TrainingSection userId={user.id} />}
-        {activeSection === 'food' && <NutritionSection />}
-        {activeSection === 'recovery' && <RecoverySection />}
+        <ActiveComponent {...(active.needsUser ? { userId: user.id } : {})} />
       </div>
 
-      <nav className="main-nav main-nav--bottom">
-        {SECTIONS.map((s) => (
-          <button
-            key={s.id}
-            className={activeSection === s.id ? 'active' : ''}
-            onClick={() => setActiveSection(s.id)}
-            style={{ '--accent': accentMap[s.id] }}
-          >
-            <span className="bottom-nav-icon">{s.icon}</span>
-            <span className="bottom-nav-label">{s.label}</span>
-          </button>
-        ))}
-      </nav>
+      <MainNav sections={SECTIONS} active={activeId} onSelect={setActiveId} variant="bottom" />
 
       <button
         id="theme-toggle"

@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { logKey } from '../utils/logKey';
 
-export function useWorkoutLog(userId) {
+const EMPTY = { done: false, weight: '', reps: '' };
+
+// planId reserved for multi-plan support. Today uses 'default' — the
+// key format stays backward-compatible so existing rows still match.
+export function useWorkoutLog(userId, planId = 'default') {
   const [log, setLog] = useState({});
 
   useEffect(() => {
@@ -20,37 +25,41 @@ export function useWorkoutLog(userId) {
       });
   }, [userId]);
 
-  function getEntry(week, phase, day, exIndex) {
-    const key = `w${week}_p${phase}_d${day}_e${exIndex}`;
-    return log[key] || { done: false, weight: '', reps: '' };
+  const k = (week, phase, day, exIdx) => logKey(week, phase, day, exIdx, planId);
+
+  function getEntry(week, phase, day, exIdx) {
+    return log[k(week, phase, day, exIdx)] || EMPTY;
   }
 
-  async function updateEntry(week, phase, day, exIndex, fields) {
-    const key = `w${week}_p${phase}_d${day}_e${exIndex}`;
-    const current = log[key] || { done: false, weight: '', reps: '' };
-    const updated = { ...current, ...fields };
-
-    setLog((prev) => ({ ...prev, [key]: updated }));
+  async function updateEntry(week, phase, day, exIdx, fields) {
+    const key = k(week, phase, day, exIdx);
+    let next;
+    setLog((prev) => {
+      next = { ...(prev[key] || EMPTY), ...fields };
+      return { ...prev, [key]: next };
+    });
 
     await supabase.from('workout_log').upsert({
       user_id: userId,
       log_key: key,
-      done: updated.done,
-      weight: updated.weight,
-      reps: updated.reps,
+      done: next.done,
+      weight: next.weight,
+      reps: next.reps,
       updated_at: new Date().toISOString(),
     });
   }
 
-  function toggleDone(week, phase, day, exIndex) {
-    const entry = getEntry(week, phase, day, exIndex);
-    updateEntry(week, phase, day, exIndex, { done: !entry.done });
+  function toggleDone(week, phase, day, exIdx) {
+    const key = k(week, phase, day, exIdx);
+    const current = log[key] || EMPTY;
+    updateEntry(week, phase, day, exIdx, { done: !current.done });
   }
 
   function isDayComplete(week, phase, day, totalExercises) {
-    return Array.from({ length: totalExercises }, (_, i) =>
-      getEntry(week, phase, day, i).done
-    ).every(Boolean);
+    for (let i = 0; i < totalExercises; i++) {
+      if (!(log[k(week, phase, day, i)]?.done)) return false;
+    }
+    return true;
   }
 
   async function clearLog() {

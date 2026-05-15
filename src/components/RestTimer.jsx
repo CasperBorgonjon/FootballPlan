@@ -2,11 +2,19 @@ import { useState, useEffect, useRef } from 'react';
 
 const PRESETS = [30, 60, 90, 120, 180];
 
-export default function RestTimer({ onClose }) {
+// Single-countdown rest timer, generalized to support interval programming.
+// Pass `intervals: [{ label, duration }, ...]` for sprint/HIIT sequences.
+// When `intervals` is omitted the original rest-timer UI is shown.
+export default function RestTimer({ onClose, intervals = null }) {
+  const isInterval = Array.isArray(intervals) && intervals.length > 0;
   const [selected, setSelected] = useState(90);
   const [timeLeft, setTimeLeft] = useState(null);
   const [running, setRunning] = useState(false);
+  const [intervalIdx, setIntervalIdx] = useState(0);
   const intervalRef = useRef(null);
+
+  const currentLength = isInterval ? intervals[intervalIdx]?.duration ?? 0 : selected;
+  const currentLabel = isInterval ? intervals[intervalIdx]?.label : null;
 
   useEffect(() => {
     if (running && timeLeft > 0) {
@@ -14,6 +22,12 @@ export default function RestTimer({ onClose }) {
         setTimeLeft((t) => {
           if (t <= 1) {
             clearInterval(intervalRef.current);
+            // Advance to next interval if programmed.
+            if (isInterval && intervalIdx < intervals.length - 1) {
+              setIntervalIdx((i) => i + 1);
+              setTimeLeft(intervals[intervalIdx + 1].duration);
+              return intervals[intervalIdx + 1].duration;
+            }
             setRunning(false);
             return 0;
           }
@@ -22,10 +36,11 @@ export default function RestTimer({ onClose }) {
       }, 1000);
     }
     return () => clearInterval(intervalRef.current);
-  }, [running, timeLeft]);
+  }, [running, timeLeft, isInterval, intervalIdx, intervals]);
 
   function start() {
-    setTimeLeft(selected);
+    setIntervalIdx(0);
+    setTimeLeft(isInterval ? intervals[0].duration : selected);
     setRunning(true);
   }
 
@@ -33,13 +48,14 @@ export default function RestTimer({ onClose }) {
     clearInterval(intervalRef.current);
     setRunning(false);
     setTimeLeft(null);
+    setIntervalIdx(0);
   }
 
-  const display = timeLeft != null ? timeLeft : selected;
+  const display = timeLeft != null ? timeLeft : currentLength;
   const mins = String(Math.floor(display / 60)).padStart(2, '0');
   const secs = String(display % 60).padStart(2, '0');
-  const progress = timeLeft != null ? timeLeft / selected : 1;
-  const isDone = timeLeft === 0;
+  const progress = timeLeft != null && currentLength > 0 ? timeLeft / currentLength : 1;
+  const isDone = timeLeft === 0 && (!isInterval || intervalIdx === intervals.length - 1);
 
   const circumference = 2 * Math.PI * 54;
 
@@ -47,11 +63,16 @@ export default function RestTimer({ onClose }) {
     <div className="timer-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="timer-modal">
         <div className="timer-header">
-          <span className="timer-title">REST TIMER</span>
+          <span className="timer-title">{isInterval ? 'INTERVAL TIMER' : 'REST TIMER'}</span>
           <button className="timer-close" onClick={onClose}>✕</button>
         </div>
 
-        {/* Circular progress */}
+        {currentLabel && (
+          <div style={{ textAlign: 'center', color: 'var(--text-sub)', fontSize: 12, letterSpacing: 1 }}>
+            {currentLabel.toUpperCase()} · {intervalIdx + 1}/{intervals.length}
+          </div>
+        )}
+
         <div className="timer-circle-wrap">
           <svg width="140" height="140" viewBox="0 0 120 120">
             <circle cx="60" cy="60" r="54" fill="none" stroke="var(--bg-row)" strokeWidth="6" />
@@ -72,8 +93,7 @@ export default function RestTimer({ onClose }) {
           </div>
         </div>
 
-        {/* Presets */}
-        {!running && timeLeft == null && (
+        {!isInterval && !running && timeLeft == null && (
           <div className="timer-presets">
             {PRESETS.map((s) => (
               <button
@@ -91,7 +111,6 @@ export default function RestTimer({ onClose }) {
           </div>
         )}
 
-        {/* Controls */}
         <div className="timer-controls">
           {!running && timeLeft == null && (
             <button className="timer-btn timer-btn--start" onClick={start}>START</button>

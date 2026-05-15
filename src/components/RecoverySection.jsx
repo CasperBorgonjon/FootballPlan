@@ -1,21 +1,14 @@
 import { useState } from 'react';
 import { recoveryData } from '../data/recovery';
+import Pill from './ui/Pill';
+import Badge from './ui/Badge';
 
 function RecoveryCard({ card, accent }) {
   return (
     <div className="rec-card">
       <div className="rec-card-head">
         <div className="rec-card-title">{card.title}</div>
-        <span
-          className="badge"
-          style={{
-            color: card.pColor,
-            background: `${card.pColor}18`,
-            border: `1px solid ${card.pColor}30`,
-          }}
-        >
-          {card.priority}
-        </span>
+        <Badge color={card.pColor}>{card.priority}</Badge>
       </div>
       {card.items.map((item, i) => (
         <div
@@ -40,17 +33,15 @@ export default function RecoverySection() {
     <div className="section-content">
       <div className="rec-tabs-wrap">
         {recoveryData.tabs.map((t) => (
-          <button
+          <Pill
             key={t.id}
-            className="rec-tab"
+            active={activeTab === t.id}
+            color={tabData.accent}
             onClick={() => setActiveTab(t.id)}
-            style={{
-              background: activeTab === t.id ? tabData.accent : 'var(--bg-card)',
-              color: activeTab === t.id ? '#000' : 'var(--text-sub)',
-            }}
+            className="rec-tab"
           >
             {t.icon} {t.label}
-          </button>
+          </Pill>
         ))}
       </div>
 

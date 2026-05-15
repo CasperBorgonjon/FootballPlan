@@ -1,5 +1,6 @@
 import { TOTAL_WEEKS } from '../hooks/useWeekTracker';
 import { trainingPlan } from '../data/training';
+import Badge from './ui/Badge';
 
 export default function WeekBanner({ currentWeek, currentPhase, allDaysComplete, onStart, onReset, onCompleteWeek }) {
   if (!currentWeek) {
@@ -29,9 +30,7 @@ export default function WeekBanner({ currentWeek, currentPhase, allDaysComplete,
             </button>
           )}
           {allDaysComplete && isLastWeek && (
-            <span className="badge" style={{ color: '#5BF0A5', background: '#5BF0A520', border: '1px solid #5BF0A540' }}>
-              PLAN COMPLETE 🏆
-            </span>
+            <Badge color="#5BF0A5">PLAN COMPLETE 🏆</Badge>
           )}
           <button className="week-banner-reset" onClick={onReset} title="Reset plan">↺</button>
         </div>

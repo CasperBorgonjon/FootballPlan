@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { nutritionData } from '../data/nutrition';
+import Pill from './ui/Pill';
+
+const TRAINING_ACCENT = '#5BF0A5';
 
 function MacroStrip({ macros }) {
   return (
@@ -63,26 +66,12 @@ export default function NutritionSection() {
     <div className="section-content">
       {/* Day type toggle */}
       <div className="food-toggle-wrap">
-        <button
-          className="food-pill"
-          onClick={() => handleFoodDay('training')}
-          style={{
-            background: foodDay === 'training' ? '#5BF0A5' : 'var(--bg-card)',
-            color: foodDay === 'training' ? '#000' : 'var(--text-sub)',
-          }}
-        >
+        <Pill active={foodDay === 'training'} color={TRAINING_ACCENT} onClick={() => handleFoodDay('training')}>
           ⚡ Training Day
-        </button>
-        <button
-          className="food-pill"
-          onClick={() => handleFoodDay('rest')}
-          style={{
-            background: foodDay === 'rest' ? '#5BF0A5' : 'var(--bg-card)',
-            color: foodDay === 'rest' ? '#000' : 'var(--text-sub)',
-          }}
-        >
+        </Pill>
+        <Pill active={foodDay === 'rest'} color={TRAINING_ACCENT} onClick={() => handleFoodDay('rest')}>
           😴 Rest Day
-        </button>
+        </Pill>
       </div>
 
       <MacroStrip macros={data.macros} />
@@ -91,17 +80,9 @@ export default function NutritionSection() {
         {/* Category pills */}
         <div className="cat-pills">
           {data.categories.map((c) => (
-            <button
-              key={c.id}
-              className="food-pill"
-              onClick={() => setActiveCat(c.id)}
-              style={{
-                background: activeCat === c.id ? c.color : 'var(--bg-card)',
-                color: activeCat === c.id ? '#000' : 'var(--text-sub)',
-              }}
-            >
+            <Pill key={c.id} active={activeCat === c.id} color={c.color} onClick={() => setActiveCat(c.id)}>
               {c.icon} {c.label}
-            </button>
+            </Pill>
           ))}
         </div>
 

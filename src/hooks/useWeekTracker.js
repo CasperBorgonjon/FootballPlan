@@ -1,18 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { trainingPlan } from '../data/training';
+import { TOTAL_WEEKS, getPhaseForWeek } from '../data/training';
 
-export const TOTAL_WEEKS = 10;
+// Re-export so existing imports keep working.
+export { TOTAL_WEEKS, getPhaseForWeek };
 
-export function getPhaseForWeek(week) {
-  const boundaries = [3, 6, 10];
-  for (let i = 0; i < boundaries.length; i++) {
-    if (week <= boundaries[i]) return i;
-  }
-  return trainingPlan.phases.length - 1;
-}
-
-export function useWeekTracker(userId) {
+// planId reserved for multi-plan support — today every user has one default plan.
+export function useWeekTracker(userId, _planId = 'default') {
   const [currentWeek, setCurrentWeek] = useState(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -31,17 +25,17 @@ export function useWeekTracker(userId) {
 
   const currentPhase = currentWeek != null ? getPhaseForWeek(currentWeek) : null;
 
-  async function startPlan() {
-    const week = 1;
+  async function saveWeek(week) {
     setCurrentWeek(week);
-    await supabase.from('week_tracker').upsert({ user_id: userId, current_week: week, updated_at: new Date().toISOString() });
+    await supabase.from('week_tracker').upsert({
+      user_id: userId,
+      current_week: week,
+      updated_at: new Date().toISOString(),
+    });
   }
 
-  async function completeWeek() {
-    const next = Math.min((currentWeek ?? 1) + 1, TOTAL_WEEKS);
-    setCurrentWeek(next);
-    await supabase.from('week_tracker').upsert({ user_id: userId, current_week: next, updated_at: new Date().toISOString() });
-  }
+  const startPlan = () => saveWeek(1);
+  const completeWeek = () => saveWeek(Math.min((currentWeek ?? 1) + 1, TOTAL_WEEKS));
 
   async function resetPlan() {
     setCurrentWeek(null);
