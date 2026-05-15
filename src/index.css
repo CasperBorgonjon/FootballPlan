@@ -204,10 +204,10 @@ body {
   background: var(--bg-deep);
   color: var(--text-mute);
 }
-.ex-name { font-weight: 500; font-size: 14px; }
+.ex-name { font-weight: 500; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ex-sets { text-align: center; font-weight: 700; font-size: 16px; }
 .ex-reps { text-align: center; color: var(--text-sub); font-size: 13px; }
-.ex-note { text-align: right; color: var(--text-mute); font-size: 11px; }
+.ex-note { text-align: right; color: var(--text-mute); font-size: 11px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .coach-note {
   margin-top: 14px;
@@ -763,6 +763,21 @@ body {
 
 @media (max-width: 640px) {
   #sign-out-btn { bottom: 80px; }
+
+  .exercise-table { overflow-x: auto; }
+  .exercise-table-header,
+  .ex-row {
+    grid-template-columns: 1fr 40px 60px 72px;
+    gap: 6px;
+  }
+  .exercise-table-header--tracked,
+  .ex-row:has(.ex-check) {
+    grid-template-columns: 24px 1fr 40px 60px auto !important;
+    gap: 6px;
+  }
+  .ex-log-input { width: 40px; }
+  .ex-sets { font-size: 14px; }
+  .ex-reps { font-size: 12px; }
 }
 
 /* ═══ LOADING ═══ */
