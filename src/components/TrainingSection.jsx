@@ -142,82 +142,34 @@ export default function TrainingSection({ userId }) {
 
   const [titleHead, titleTail] = splitTitle(day.label);
   const sessionLetter = String.fromCharCode(65 + activeDay);
-  const sessionsPerWeek = phase.days.filter((d) => d.exercises.length > 0).length;
   const estMinutes = Math.max(20, day.exercises.length * 10);
-  const dayNum = String(activeDay + 1).padStart(2, '0');
   const weekDisplay = currentWeek ?? 1;
-  const weekPctDone = currentWeek
-    ? Math.round(((currentWeek - 1) / totalWeeks) * 100) + 10
-    : 0;
 
   return (
     <div className="section-content">
-      {/* Top metabar */}
-      <div className="metabar">
-        <div className="metabar-left">
-          <span className="metabar-tag">12W BLOCK</span>
-          <span className="metabar-dot">·</span>
-          <span>Fullback</span>
-          <span className="metabar-dot">·</span>
-          <span>Off-Season</span>
-        </div>
-        <div className="metabar-right">
-          WK {String(weekDisplay).padStart(2, '0')} / {totalWeeks} · DAY {dayNum} / 07
-        </div>
-      </div>
-
-      {/* Idle CTA when plan not started */}
       {!currentWeek && (
         <div className="idle-banner">
           <div className="idle-banner-text">
-            <b>Track your 12-week block.</b> Start the plan to log workouts and follow weekly progression.
+            <b>Track your 12-week block.</b> Start the plan to log workouts.
           </div>
           <button className="btn btn--primary" onClick={startPlan}>Start Plan →</button>
         </div>
       )}
 
-      {/* Hero */}
       <div className="hero">
         <div>
-          <div className="hero-eyebrow">Soccer · Complete Plan</div>
+          <div className="hero-eyebrow">
+            Week {String(weekDisplay).padStart(2, '0')} / {totalWeeks} · {phase.label}
+          </div>
           <h1 className="hero-title">
             {titleHead}{titleTail && ' — '}
             {titleTail && <em>{titleTail}</em>}
           </h1>
-          <div className="hero-sub">{day.focus} · {phase.label}</div>
-        </div>
-
-        <div className="hero-stats">
-          <div>
-            <div className="hero-stat-label">Weekly</div>
-            <div className="hero-stat-value">{sessionsPerWeek} days/wk</div>
-            <div className="hero-stat-sub">{sessionsPerWeek} sessions</div>
-          </div>
-          <div>
-            <div className="hero-stat-label">Phase</div>
-            <div className="hero-stat-value">{phase.weeksLabel.replace('Weeks ', '')}</div>
-            <div className="hero-stat-sub">{phase.name.toLowerCase()}</div>
-          </div>
-          <div>
-            <div className="hero-stat-label">Today</div>
-            <div className="hero-stat-value">{day.exercises.length}</div>
-            <div className="hero-stat-sub">exercises</div>
-          </div>
+          <div className="hero-sub">{day.focus}</div>
         </div>
       </div>
 
-      {/* Phase progress bar */}
       <div className="phase-progress">
-        <div className="phase-progress-head">
-          <div className="phase-progress-title">
-            <span className="phase-progress-eyebrow">Phase</span>
-            <span className="phase-progress-num">
-              {String(activePhase + 1).padStart(2, '0')} / 0{phases.length}
-            </span>
-            <span className="phase-progress-name">— <b>{phase.label}</b></span>
-          </div>
-          <div className="phase-progress-pct">{weekPctDone}% complete</div>
-        </div>
         <div className="phase-progress-track">
           {Array.from({ length: totalWeeks }, (_, i) => {
             const w = i + 1;
@@ -294,7 +246,7 @@ export default function TrainingSection({ userId }) {
                 Session {sessionLetter} · <b>{day.focus.toUpperCase()}</b>
               </div>
               <div className="session-meta">
-                <b>{day.exercises.length}</b> exercises · ~{estMinutes} min · {phase.label}
+                <b>{day.exercises.length}</b> exercises · ~{estMinutes} min
               </div>
             </div>
           </div>
@@ -341,34 +293,40 @@ export default function TrainingSection({ userId }) {
           ))}
         </div>
 
+        {day.coachNote && (
+          <div className="coach-note coach-note--day">
+            <div className="coach-avatar">{COACH_INITIALS}</div>
+            <div className="coach-note-body">
+              <div className="coach-note-label">Day Note · {day.day}</div>
+              <div className="coach-note-text">{day.coachNote}</div>
+            </div>
+          </div>
+        )}
+
         <div className="coach-note">
           <div className="coach-avatar">{COACH_INITIALS}</div>
           <div className="coach-note-body">
-            <div className="coach-note-label">{COACH_NAME} · Note</div>
+            <div className="coach-note-label">{COACH_NAME} · Phase Note</div>
             <div className="coach-note-text">{coachNotes[activePhase]}</div>
           </div>
         </div>
       </div>
 
-      <div className="footer-bar">
-        <div>SUN = Full Rest</div>
-        <div>
-          {currentWeek && (
-            <button
-              onClick={() => {
-                if (confirm('Reset plan? All workout logs will be cleared.')) {
-                  resetPlan();
-                  log.clearLog();
-                }
-              }}
-              style={{ background: 'none', border: 'none', color: 'inherit', font: 'inherit', letterSpacing: 'inherit', textTransform: 'inherit', cursor: 'pointer' }}
-            >
-              ↺ Reset Plan
-            </button>
-          )}
+      {currentWeek && (
+        <div className="footer-bar">
+          <button
+            className="reset-btn"
+            onClick={() => {
+              if (confirm('Reset plan? All workout logs will be cleared.')) {
+                resetPlan();
+                log.clearLog();
+              }
+            }}
+          >
+            ↺ Reset Plan
+          </button>
         </div>
-        <div>12-Week Block</div>
-      </div>
+      )}
 
       {showTimer && <RestTimer onClose={() => setShowTimer(false)} />}
     </div>

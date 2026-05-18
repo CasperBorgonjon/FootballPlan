@@ -8,11 +8,21 @@ export const nutritionData = {
     ],
     categories: [
       {
+        id: 'wake', label: 'Wake-Up', time: 'Within 30 min of waking', color: '#FCD34D', icon: '☀️', goal: 'Break overnight fast — light, easy to digest',
+        sections: [
+          { name: 'Eat', items: ['2–3 whole eggs scrambled', '1 slice sourdough or 1 rice cake with honey', '1 piece of fruit (banana or orange)'] },
+          { name: 'Drink', items: ['500ml water immediately on waking', 'Black coffee or green tea (skip if session < 90 min away)'] },
+          { name: 'Avoid', items: ['Heavy oats', 'Big portions', 'Dairy-heavy meals', 'High fat'] },
+          { name: 'Timing', items: ['60–90 min before pre-session meal'] },
+        ],
+      },
+      {
         id: 'pre', label: 'Pre-Session', time: '60–90 min before', color: '#F59E0B', icon: '⚡', goal: 'Fast energy, no crash',
         sections: [
           { name: 'Carb Sources', items: ['Oats / oatmeal', 'White rice or pasta', 'Banana or dates', 'Rice cakes', 'White bread + jam', 'Fruit juice (small glass)'] },
           { name: 'Protein Sources', items: ['Whole eggs or egg whites', 'Greek yogurt (low fat)', 'Whey protein shake', 'Turkey slices'] },
           { name: 'Add-Ons', items: ['Honey', 'Black coffee / green tea', 'Creatine (5g)', 'Pinch of salt'] },
+          { name: 'Example', items: ['Oats + whey + banana + black coffee — simple, fast, proven'] },
           { name: 'Avoid', items: ['High-fat foods', 'High-fiber meals', 'Dairy-heavy foods', 'Spicy food', 'Carbonated drinks'] },
         ],
       },
@@ -22,24 +32,34 @@ export const nutritionData = {
           { name: 'Protein Sources', items: ['Whey protein (fast-absorbing)', 'Chicken breast', 'Tuna or white fish', 'Egg whites', 'Low-fat milk'] },
           { name: 'Carb Sources', items: ['White rice', 'Sweet potato', 'Banana, mango, pineapple', 'Rice cakes', 'White pasta'] },
           { name: 'Electrolytes', items: ['Sodium (pinch of salt)', 'Potassium (banana, coconut water)', 'Magnesium (pumpkin seeds)', 'Light sports drink'] },
+          { name: 'Example', items: ['Whey shake + banana immediately', 'Proper meal (rice + chicken + veg) within the hour'] },
           { name: 'Avoid', items: ['High-fat meats', 'Alcohol', 'Skipping this meal'] },
         ],
       },
       {
-        id: 'main', label: 'Main Meals', time: 'Lunch & Dinner', color: '#38BDF8', icon: '🍽', goal: 'Balanced performance fuel',
+        id: 'lunch', label: 'Lunch', time: 'Midday — main fuel meal', color: '#38BDF8', icon: '🍽', goal: 'Biggest meal of day. Don\'t be shy on carbs.',
         sections: [
-          { name: 'Protein Sources', items: ['Chicken breast or thigh', 'Salmon / mackerel', 'Lean beef or turkey', 'Eggs', 'Lentils / chickpeas'] },
-          { name: 'Complex Carbs', items: ['Brown or white rice', 'Sweet potato', 'Quinoa', 'Pasta', 'Whole grain bread', 'Oats'] },
-          { name: 'Vegetables', items: ['Broccoli', 'Spinach / kale', 'Bell peppers', 'Zucchini', 'Tomatoes', 'Carrots', 'Beetroot (good for endurance)'] },
+          { name: 'Protein', items: ['Chicken breast or thigh', 'Salmon / mackerel', 'Lean beef or turkey', 'Eggs', 'Lentils / chickpeas'] },
+          { name: 'Complex Carbs', items: ['Brown or white rice', 'Sweet potato', 'Quinoa', 'Pasta', 'Whole grain bread'] },
+          { name: 'Vegetables', items: ['Broccoli', 'Spinach / kale', 'Bell peppers', 'Zucchini', 'Tomatoes', 'Carrots', 'Beetroot'] },
           { name: 'Healthy Fats', items: ['Avocado', 'Olive oil', 'Almonds / walnuts', 'Nut butters', 'Fatty fish'] },
         ],
       },
       {
-        id: 'snack', label: 'Snacks', time: 'Between meals', color: '#A78BFA', icon: '🤏', goal: 'Bridge gaps, maintain energy',
+        id: 'snack', label: 'Snack', time: 'Between lunch & dinner', color: '#A78BFA', icon: '🤏', goal: 'Bridge gaps, maintain energy',
         sections: [
           { name: 'High-Protein', items: ['Greek yogurt', 'Cottage cheese', 'Hard-boiled eggs', 'Protein bar', 'Turkey rolls'] },
           { name: 'Carb-Based', items: ['Banana or apple', 'Rice cakes + honey', 'Granola (low sugar)', 'Dates or raisins (small)'] },
           { name: 'Fat + Protein', items: ['Almonds + jerky', 'Peanut butter on rice cakes', 'Hummus + veggies', 'Trail mix'] },
+        ],
+      },
+      {
+        id: 'dinner', label: 'Dinner', time: 'Evening — balanced wind-down', color: '#38BDF8', icon: '🍲', goal: 'Don\'t skip carbs — glycogen needed overnight',
+        sections: [
+          { name: 'Protein', items: ['Chicken breast or thigh', 'Salmon', 'Lean beef', 'Eggs or tofu'] },
+          { name: 'Carbs', items: ['White rice', 'Sweet potato', 'Quinoa', 'Whole grain pasta'] },
+          { name: 'Vegetables', items: ['Stir-fried mixed veg', 'Big green salad', 'Roasted root vegetables'] },
+          { name: 'Size', items: ['Similar to lunch on hard days', 'Slightly smaller on moderate days'] },
         ],
       },
       {
@@ -49,6 +69,34 @@ export const nutritionData = {
           { name: 'Optional Fats', items: ['Almond butter (1 tbsp)', 'Walnuts', 'Chia seeds'] },
           { name: 'Sleep Support', items: ['Chamomile tea', 'Magnesium glycinate', 'Tart cherry juice', 'Small amount of honey'] },
           { name: 'Avoid', items: ['Large carb-heavy meals', 'Caffeine after 2pm', 'Alcohol', 'Heavy fats late at night'] },
+        ],
+      },
+    ],
+    examples: [
+      {
+        title: 'Morning Session',
+        rows: [
+          ['07:00', 'Wake-up', '2 eggs + rice cake + banana + 500ml water'],
+          ['08:15', 'Pre-session', 'Oats + whey + coffee + creatine'],
+          ['09:30', 'TRAIN', ''],
+          ['11:00', 'Post-session', 'Whey shake + banana, meal within hour'],
+          ['12:00', 'Lunch', 'Rice + chicken + broccoli + olive oil'],
+          ['15:30', 'Snack', 'Greek yogurt + honey + almonds'],
+          ['19:00', 'Dinner', 'Sweet potato + salmon + mixed veg'],
+          ['21:30', 'Night', 'Cottage cheese + tart cherry juice + magnesium'],
+        ],
+      },
+      {
+        title: 'Afternoon / Evening Session',
+        rows: [
+          ['08:00', 'Wake-up', '2 eggs + sourdough + fruit + 500ml water'],
+          ['09:00', 'Breakfast', 'Oats + whey or egg white omelette + coffee'],
+          ['12:30', 'Lunch', 'Rice + chicken + veg (main carb load)'],
+          ['14:30', 'Pre-session', 'Banana + rice cake + honey + creatine'],
+          ['16:00', 'TRAIN', ''],
+          ['17:30', 'Post-session', 'Whey shake immediately, meal within hour'],
+          ['18:30', 'Dinner', 'White rice + chicken + sweet potato + veg'],
+          ['21:30', 'Night', 'Cottage cheese + tart cherry juice + magnesium'],
         ],
       },
     ],
@@ -90,6 +138,16 @@ export const nutritionData = {
         sections: [
           { name: 'Best Rest Day Snacks', items: ['Cottage cheese + berries', 'Hard-boiled eggs', 'Protein shake (water-based)', 'Apple + almond butter', 'Greek yogurt (plain)'] },
           { name: 'Avoid on Rest Days', items: ['High-carb snacks (crisps, bread)', 'Sugary drinks or juices', 'Large portions', 'Takeaways or processed food'] },
+        ],
+      },
+      {
+        id: 'sunday', label: 'Sunday Shift', time: 'Work day — also rest day', color: '#FB923C', icon: '👷', goal: 'Rest from training but on your feet all day — treat as light training day',
+        sections: [
+          { name: 'Calories', items: ['Bump to 2,600–2,700 kcal — don\'t drop to full rest-day calories'] },
+          { name: 'Carbs', items: ['Moderate 280–300g — glycogen needed on your feet all day'] },
+          { name: 'Hydration', items: ['2.5–3L minimum — standing + light activity = sweat loss'] },
+          { name: 'Logistics', items: ['Pack food — don\'t rely on what\'s available at work'] },
+          { name: 'Suggested Packed', items: ['Rice cakes + turkey', 'Fruit + Greek yogurt', 'Nuts', 'Protein shake'] },
         ],
       },
     ],

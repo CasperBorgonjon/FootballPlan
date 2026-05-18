@@ -32,17 +32,24 @@ function AppInner() {
 
   return (
     <>
-      <MainNav sections={SECTIONS} active={activeId} onSelect={setActiveId} variant="top" />
+      <header className="app-header">
+        <div className="app-header-brand">
+          <span className="app-header-mark">◆</span>
+          <span className="app-header-title">PLAN</span>
+        </div>
+        <MainNav sections={SECTIONS} active={activeId} onSelect={setActiveId} variant="top" />
+        <div className="app-header-actions">
+          <button className="app-header-signout" onClick={() => supabase.auth.signOut()}>
+            Sign out
+          </button>
+        </div>
+      </header>
 
       <div className="page-content">
         <ActiveComponent {...(active.needsUser ? { userId: user.id } : {})} />
       </div>
 
       <MainNav sections={SECTIONS} active={activeId} onSelect={setActiveId} variant="bottom" />
-
-      <button id="sign-out-btn" onClick={() => supabase.auth.signOut()}>
-        Sign out
-      </button>
     </>
   );
 }

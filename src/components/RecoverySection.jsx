@@ -23,26 +23,15 @@ function RecoveryCard({ card }) {
 export default function RecoverySection() {
   const [activeTab, setActiveTab] = useState('sleep');
   const tabData = recoveryData.content[activeTab];
-  const activeTabMeta = recoveryData.tabs.find((t) => t.id === activeTab);
 
   return (
     <div className="section-content">
-      <div className="metabar">
-        <div className="metabar-left">
-          <span className="metabar-tag">RECOVERY</span>
-          <span className="metabar-dot">·</span>
-          <span>Adaptation system</span>
-        </div>
-        <div className="metabar-right">{activeTabMeta.label.toUpperCase()}</div>
-      </div>
-
       <div className="hero">
         <div>
-          <div className="hero-eyebrow">Soccer · Recovery & Tracking</div>
+          <div className="hero-eyebrow">Recovery</div>
           <h1 className="hero-title">
             {tabData.title.split(' ')[0]} — <em>{tabData.title.split(' ').slice(1).join(' ').toLowerCase()}</em>
           </h1>
-          <div className="hero-sub">{tabData.sub}</div>
         </div>
       </div>
 
@@ -60,10 +49,6 @@ export default function RecoverySection() {
         ))}
       </div>
 
-      <div className="footer-bar">
-        <div>USE WITH TRAINING & NUTRITION</div>
-        <div>12-WEEK BLOCK</div>
-      </div>
     </div>
   );
 }

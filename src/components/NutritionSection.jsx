@@ -24,7 +24,7 @@ function FoodSection({ sec }) {
 
 export default function NutritionSection() {
   const [foodDay, setFoodDay] = useState('training');
-  const [activeCat, setActiveCat] = useState('pre');
+  const [activeCat, setActiveCat] = useState('wake');
 
   const data = nutritionData[foodDay];
   const cat = data.categories.find((c) => c.id === activeCat) || data.categories[0];
@@ -36,22 +36,12 @@ export default function NutritionSection() {
 
   return (
     <div className="section-content">
-      <div className="metabar">
-        <div className="metabar-left">
-          <span className="metabar-tag">NUTRITION</span>
-          <span className="metabar-dot">·</span>
-          <span>Performance fueling</span>
-        </div>
-        <div className="metabar-right">{foodDay === 'training' ? 'TRAINING DAY' : 'REST DAY'}</div>
-      </div>
-
       <div className="hero">
         <div>
-          <div className="hero-eyebrow">Soccer · Nutrition Guide</div>
+          <div className="hero-eyebrow">Nutrition</div>
           <h1 className="hero-title">
             Fuel — <em>{foodDay === 'training' ? 'training day' : 'rest day'}</em>
           </h1>
-          <div className="hero-sub">Macros below are tuned for a 6-day off-season block.</div>
         </div>
       </div>
 
@@ -95,6 +85,26 @@ export default function NutritionSection() {
           <FoodSection key={sec.name} sec={sec} />
         ))}
       </div>
+
+      {data.examples && (
+        <div className="timing-examples">
+          <div className="principles-heading">Sample Day Timing</div>
+          <div className="timing-grid">
+            {data.examples.map((ex) => (
+              <div key={ex.title} className="timing-card">
+                <div className="timing-card-title">{ex.title}</div>
+                {ex.rows.map((r) => (
+                  <div key={r[0] + r[1]} className="timing-row">
+                    <span className="timing-time">{r[0]}</span>
+                    <span className="timing-meal">{r[1]}</span>
+                    <span className="timing-detail">{r[2]}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="principles">
         <div className="principles-heading">Core Principles</div>

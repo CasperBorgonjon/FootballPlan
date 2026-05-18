@@ -67,7 +67,7 @@ export const recoveryData = {
         {
           title: 'Deload Weeks', priority: 'EVERY 4TH WEEK', pColor: '#A78BFA',
           items: [
-            { l: 'When', d: 'Week 4 and Week 8 of your 12-week block.' },
+            { l: 'When', d: 'Week 4 and Week 8 of your 10-week block.' },
             { l: 'How', d: 'Drop volume by 40%. Keep the same weights/intensity — just fewer sets.' },
             { l: 'Why', d: 'Supercompensation happens during deloads, not during hard weeks. Don\'t skip.' },
             { l: 'Active rest', d: 'Light jog, swimming, cycling, mobility work. Full rest is counterproductive.' },

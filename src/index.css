@@ -405,6 +405,60 @@ input { font-family: inherit; }
   font-size: 13px; line-height: 1.55; color: var(--ink-90);
 }
 
+.coach-note--day {
+  margin-top: 14px;
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent);
+}
+.coach-note--day .coach-avatar {
+  background: var(--accent); color: var(--on-accent);
+}
+
+/* ── Timing examples (nutrition) ── */
+.timing-examples { padding: 8px var(--pad-x) 22px; }
+.timing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+.timing-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 18px;
+}
+.timing-card-title {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-90);
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.timing-row {
+  display: grid;
+  grid-template-columns: 56px 90px 1fr;
+  gap: 10px;
+  padding: 7px 0;
+  font-size: 12px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--ink-08);
+}
+.timing-row:last-child { border-bottom: none; }
+.timing-time {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-55);
+}
+.timing-meal {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.timing-detail { color: var(--ink-70); }
+
 /* ── Browsing banner ── */
 .browsing-banner {
   display: flex; justify-content: space-between; align-items: center;
@@ -438,16 +492,52 @@ input { font-family: inherit; }
 }
 .idle-banner-text b { font-weight: 600; color: var(--ink); }
 
-/* ── Main nav (top) ── */
-.main-nav--top {
-  display: flex; gap: 4px;
+/* ── App header (PC top bar) ── */
+.app-header {
+  position: sticky; top: 0; z-index: 60;
+  display: flex; align-items: center;
+  gap: 28px;
   padding: 0 var(--pad-x);
   background: var(--bg);
   border-bottom: 1px solid var(--line);
 }
+.app-header-brand {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 0;
+  flex-shrink: 0;
+}
+.app-header-mark {
+  color: var(--accent);
+  font-size: 14px;
+  filter: drop-shadow(0 0 6px var(--accent-soft));
+}
+.app-header-title {
+  font-size: 13px; font-weight: 800;
+  letter-spacing: 0.24em;
+  color: var(--ink);
+}
+.app-header-actions {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 12px;
+}
+.app-header-signout {
+  background: none; border: none;
+  color: var(--ink-55);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 6px 10px; border-radius: 4px;
+  transition: color .15s, background .15s;
+}
+.app-header-signout:hover { color: var(--ink); background: var(--ink-08); }
+
+/* ── Main nav (top) ── */
+.main-nav--top {
+  display: flex; gap: 4px;
+  flex: 1;
+}
 .main-nav--top button {
   background: none; border: none;
-  padding: 14px 18px;
+  padding: 14px 16px;
   font-size: 11px; font-weight: 600;
   letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--ink-55);
@@ -461,6 +551,17 @@ input { font-family: inherit; }
   border-bottom-color: var(--accent);
 }
 .main-nav--bottom { display: none; }
+
+.reset-btn {
+  background: none; border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 8px 14px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-55);
+  transition: color .15s, border-color .15s;
+}
+.reset-btn:hover { color: var(--danger); border-color: var(--danger); }
 
 /* ── Section content reveal ── */
 .section-content { animation: fade-up .25s ease both; }
@@ -836,20 +937,6 @@ input { font-family: inherit; }
   color: var(--ink-55);
 }
 
-/* ── Sign out ── */
-#sign-out-btn {
-  position: fixed;
-  top: 14px; right: var(--pad-x);
-  background: none; border: none;
-  color: var(--ink-55);
-  font-size: 11px; font-weight: 600;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  padding: 4px 8px; border-radius: 4px;
-  transition: color .15s, background .15s;
-  z-index: 50;
-}
-#sign-out-btn:hover { color: var(--ink); background: var(--ink-08); }
-
 /* ══════ MOBILE ══════ */
 @media (max-width: 900px) {
   .ex-row {
@@ -884,8 +971,8 @@ input { font-family: inherit; }
   .phase-progress { padding: 14px var(--pad-x-mobile); }
   .metabar { padding: 12px var(--pad-x-mobile) 10px; font-size: 10px; gap: 8px; }
   .metabar-right { display: none; }
-  .main-nav--top { padding: 0 var(--pad-x-mobile); }
-  .main-nav--top button { padding: 12px 12px; font-size: 10px; }
+  .app-header { padding: 0 var(--pad-x-mobile); gap: 12px; }
+  .main-nav--top button { padding: 12px 10px; font-size: 10px; }
   .browsing-banner, .idle-banner { padding: 12px var(--pad-x-mobile); margin-left: 0; margin-right: 0; }
   .footer-bar { padding: 16px var(--pad-x-mobile) 90px; }
 
@@ -895,10 +982,11 @@ input { font-family: inherit; }
   .cat-card, .rec-content { margin-left: var(--pad-x-mobile); margin-right: var(--pad-x-mobile); }
   .rec-content { padding-left: 0; padding-right: 0; }
   .principles-grid { grid-template-columns: 1fr; }
+  .timing-examples { padding-left: var(--pad-x-mobile); padding-right: var(--pad-x-mobile); }
+  .timing-grid { grid-template-columns: 1fr; }
+  .timing-row { grid-template-columns: 50px 80px 1fr; gap: 8px; }
   .rec-item { flex-direction: column; gap: 4px; }
   .rec-item-label { min-width: 0; }
-
-  #sign-out-btn { top: 10px; right: var(--pad-x-mobile); }
 }
 
 @media (max-width: 640px) {
