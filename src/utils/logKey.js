@@ -1,8 +1,10 @@
 // Central log-key generator.
-// Today: planId defaults to 'default' but is omitted from the key so existing
-// rows keep working. When multi-plan support lands, change ONE place here.
-export function logKey(week, phaseIdx, dayIdx, exIdx, planId = 'default') {
-  return planId === 'default'
-    ? `w${week}_p${phaseIdx}_d${dayIdx}_e${exIdx}`
-    : `pl${planId}_w${week}_p${phaseIdx}_d${dayIdx}_e${exIdx}`;
+//
+// Keyed by program id + week + the exercise's STABLE id (not its position).
+// This is what lets programs be reordered/edited without orphaning logged
+// weights. Every exercise in a program carries a stable `id`.
+//
+// Format: `{programId}_w{week}_{exerciseId}`
+export function logKey(programId, week, exerciseId) {
+  return `${programId}_w${week}_${exerciseId}`;
 }

@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 
-const PRESETS = [30, 60, 90, 120, 180];
+const PRESETS = [30, 60, 90, 120, 180, 240];
 
 // Single-countdown rest timer, generalized to support interval programming.
 // Pass `intervals: [{ label, duration }, ...]` for sprint/HIIT sequences.
+// `defaultSeconds` preselects a goal-appropriate rest (see suggestedRest).
 // When `intervals` is omitted the original rest-timer UI is shown.
-export default function RestTimer({ onClose, intervals = null }) {
+export default function RestTimer({ onClose, intervals = null, defaultSeconds = 90 }) {
   const isInterval = Array.isArray(intervals) && intervals.length > 0;
-  const [selected, setSelected] = useState(90);
+  const initial = PRESETS.includes(defaultSeconds) ? defaultSeconds : 90;
+  const [selected, setSelected] = useState(initial);
   const [timeLeft, setTimeLeft] = useState(null);
   const [running, setRunning] = useState(false);
   const [intervalIdx, setIntervalIdx] = useState(0);

@@ -1,87 +1,153 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { usePlan } from '../hooks/usePlan';
-import { useWeekTracker } from '../hooks/useWeekTracker';
 import { useWorkoutLog } from '../hooks/useWorkoutLog';
-import { useSessionNotes } from '../hooks/useSessionNotes';
+import { useReadiness } from '../hooks/useReadiness';
 import { useSession, formatElapsed } from '../hooks/useSession';
+import { addDays } from '../utils/schedule';
+import {
+  readinessFrom, recommendation, matchPosition, matchDayIndexOf,
+  suggestedRest, restLabel,
+} from '../utils/coaching';
+import { equipmentInfo, isFullKit } from '../data/equipment';
 import RestTimer from './RestTimer';
 
 const DAY_TO_INDEX = { MON: 0, TUE: 1, WED: 2, THU: 3, FRI: 4, SAT: 5, SUN: 6 };
+const DAY_SHORT = { MON: 'Mon', TUE: 'Tue', WED: 'Wed', THU: 'Thu', FRI: 'Fri', SAT: 'Sat', SUN: 'Sun' };
 const TODAY_INDEX = (new Date().getDay() + 6) % 7;
 
-const COACH_NAME = 'Coach Mario';
-const COACH_INITIALS = 'MA';
-
-function splitTitle(label) {
+function dayTitle(label) {
   const idx = label.indexOf(' — ');
-  if (idx === -1) return [label, null];
-  return [label.slice(0, idx), label.slice(idx + 3)];
+  return idx === -1 ? label : label.slice(idx + 3);
 }
 
-function splitNote(note) {
-  if (!note) return ['', ''];
-  const idx = note.indexOf(',');
-  if (idx === -1) return [note, ''];
-  return [note.slice(0, idx).trim(), note.slice(idx + 1).trim()];
+/* ── Readiness check-in + auto-regulation ── */
+const LEGS = [['fresh', 'Fresh'], ['normal', 'Normal'], ['heavy', 'Heavy']];
+const ENERGY = [['good', 'Good'], ['ok', 'OK'], ['low', 'Low']];
+
+function ReadinessCard({ userId, date, programType, match }) {
+  const { checkin, save } = useReadiness(userId, date);
+  const readiness = readinessFrom(checkin);
+  const rec = readiness ? recommendation(readiness.level, programType, match) : null;
+
+  return (
+    <div className={`readiness${readiness ? ` is-${readiness.level}` : ''}`}>
+      <div className="readiness-head">
+        <span className="readiness-eyebrow">Today’s readiness</span>
+        {readiness && <span className={`readiness-dot is-${readiness.level}`} />}
+      </div>
+
+      <div className="readiness-inputs">
+        <label className="rd-field">
+          <span>Sleep</span>
+          <div className="rd-sleep">
+            <input
+              type="number" min="0" max="14" step="0.5" inputMode="decimal"
+              value={checkin?.sleep_hours ?? ''}
+              placeholder="—"
+              onChange={(e) => save({ sleep_hours: e.target.value })}
+            />
+            <i>h</i>
+          </div>
+        </label>
+        <label className="rd-field">
+          <span>Legs</span>
+          <div className="rd-seg">
+            {LEGS.map(([v, l]) => (
+              <button key={v} className={checkin?.legs === v ? 'is-on' : ''} onClick={() => save({ legs: v })}>{l}</button>
+            ))}
+          </div>
+        </label>
+        <label className="rd-field">
+          <span>Energy</span>
+          <div className="rd-seg">
+            {ENERGY.map(([v, l]) => (
+              <button key={v} className={checkin?.energy === v ? 'is-on' : ''} onClick={() => save({ energy: v })}>{l}</button>
+            ))}
+          </div>
+        </label>
+      </div>
+
+      {rec ? (
+        <div className="readiness-rec">
+          <div className="readiness-rec-title">{rec.title}</div>
+          <div className="readiness-rec-text">{rec.text}</div>
+          {rec.note && <div className="readiness-rec-note">{rec.note}</div>}
+        </div>
+      ) : (
+        <div className="readiness-rec readiness-rec--empty">
+          Log how you slept and feel to get today’s call.
+        </div>
+      )}
+    </div>
+  );
 }
 
-function ExerciseRow({ ex, exIndex, week, phaseIndex, dayIndex, log, isBrowsing }) {
+function CommitmentRow({ commitment }) {
+  const isMatch = commitment.type === 'match';
+  return (
+    <div className={`commitment commitment--${commitment.type}`}>
+      <span className="commitment-tag">{isMatch ? 'Match' : 'Team'}</span>
+      <span className="commitment-label">{commitment.label}</span>
+      {(commitment.start || commitment.end) && (
+        <span className="commitment-time">
+          {commitment.start}{commitment.end ? `–${commitment.end}` : ''}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ExerciseRow({ ex, week, log, tracked, accent, restSec, equip, last }) {
   const { getEntry, toggleDone, updateEntry } = log;
-  const tracked = week && !isBrowsing;
-  const entry = tracked ? getEntry(week, phaseIndex, dayIndex, exIndex) : null;
+  const entry = tracked ? getEntry(week, ex.id) : null;
   const [editing, setEditing] = useState(false);
-  const [load, note] = splitNote(ex.note);
-  const num = String(exIndex + 1).padStart(2, '0');
 
   return (
     <div className={`ex-row${entry?.done ? ' is-done' : ''}`}>
       {tracked ? (
         <button
           className={`ex-check${entry?.done ? ' is-done' : ''}`}
-          onClick={() => toggleDone(week, phaseIndex, dayIndex, exIndex)}
+          onClick={() => toggleDone(week, ex.id)}
           aria-label={entry?.done ? 'Mark undone' : 'Mark done'}
+          style={entry?.done ? { background: accent, borderColor: accent } : undefined}
         >
           {entry?.done ? '✓' : ''}
         </button>
       ) : (
-        <span className="ex-check" aria-hidden style={{ visibility: 'hidden' }} />
+        <span className="ex-check ex-check--static" aria-hidden />
       )}
 
-      <span className="ex-num">{num}</span>
-
-      <div className="ex-info">
-        <div className="ex-info-name">{ex.name}</div>
+      <div className="ex-main">
+        <div className="ex-name">{ex.name}</div>
+        {ex.note && <div className="ex-note">{ex.note}</div>}
+        {equip?.needsBarbell && (
+          <div className="ex-swap">No barbell today → {equip.swap}</div>
+        )}
       </div>
 
-      <div className="ex-sets-cell">
-        <div className="ex-col-label">Sets × Reps</div>
-        <div className="ex-col-value">
-          {ex.sets}<span className="x">×</span>{ex.reps}
-        </div>
+      <div className="ex-prescribe">
+        <span className="ex-sr">{ex.sets}<i>×</i>{ex.reps}</span>
+        {last ? (
+          <span className="ex-last">last {last.weight}kg{last.reps ? ` × ${last.reps}` : ''}</span>
+        ) : restSec ? (
+          <span className="ex-rest">rest {restLabel(restSec)}</span>
+        ) : null}
       </div>
-
-      <div className="ex-load-cell">
-        <div className="ex-col-label">Load</div>
-        <div className="ex-col-value ex-col-value--text">{load || '—'}</div>
-      </div>
-
-      <div className="ex-note-cell ex-note">{note || load}</div>
 
       <div className="ex-log">
         {tracked ? (
           editing ? (
             <div className="ex-log-inputs">
               <input
-                className="ex-log-input"
-                placeholder="kg"
+                className="ex-log-input" placeholder="kg"
                 value={entry?.weight || ''}
-                onChange={(e) => updateEntry(week, phaseIndex, dayIndex, exIndex, { weight: e.target.value })}
+                onChange={(e) => updateEntry(week, ex.id, { weight: e.target.value })}
+                autoFocus
               />
               <input
-                className="ex-log-input"
-                placeholder="reps"
+                className="ex-log-input" placeholder="reps"
                 value={entry?.reps || ''}
-                onChange={(e) => updateEntry(week, phaseIndex, dayIndex, exIndex, { reps: e.target.value })}
+                onChange={(e) => updateEntry(week, ex.id, { reps: e.target.value })}
               />
               <button className="ex-log-save" onClick={() => setEditing(false)}>✓</button>
             </div>
@@ -90,11 +156,11 @@ function ExerciseRow({ ex, exIndex, week, phaseIndex, dayIndex, log, isBrowsing 
               className={`ex-log-btn${entry?.weight ? ' has-value' : ''}`}
               onClick={() => setEditing(true)}
             >
-              {entry?.weight ? `${entry.weight}kg · ${entry.reps}` : '+ Log'}
+              {entry?.weight ? `${entry.weight}kg · ${entry.reps}` : 'Log'}
             </button>
           )
         ) : (
-          <span className="ex-log-btn" style={{ opacity: 0.4 }}>—</span>
+          <span className="ex-log-btn is-muted">—</span>
         )}
       </div>
     </div>
@@ -102,233 +168,209 @@ function ExerciseRow({ ex, exIndex, week, phaseIndex, dayIndex, log, isBrowsing 
 }
 
 export default function TrainingSection({ userId }) {
-  const { phases, coachNotes, totalWeeks } = usePlan();
-  const { currentWeek, currentPhase, startPlan, completeWeek, resetPlan } = useWeekTracker(userId);
-  const log = useWorkoutLog(userId);
-  useSessionNotes(userId);
+  const {
+    activeProgram, phases, focusColors, totalWeeks,
+    currentWeek, currentPhase, today, startPlan, resetPlan,
+  } = usePlan(userId);
+  const log = useWorkoutLog(userId, activeProgram?.id);
+
+  const multiPhase = phases.length > 1;
 
   const [showTimer, setShowTimer] = useState(false);
   const [activePhase, setActivePhase] = useState(() => currentPhase ?? 0);
-  const [activeDay, setActiveDay] = useState(() => Math.min(TODAY_INDEX, 5));
+  const [activeDay, setActiveDay] = useState(() => Math.min(TODAY_INDEX, 6));
   const session = useSession(currentWeek, activePhase, activeDay);
 
   const [prevPhase, setPrevPhase] = useState(currentPhase);
   if (currentPhase !== prevPhase) {
     setPrevPhase(currentPhase);
-    if (currentPhase != null) {
-      setActivePhase(currentPhase);
-    }
+    if (currentPhase != null) setActivePhase(currentPhase);
   }
 
-  const phase = phases[activePhase];
-  const day = phase.days[activeDay] ?? phase.days[0];
+  const phase = phases[activePhase] ?? phases[0];
+  const day = phase?.days[activeDay] ?? phase?.days[0];
+
   const isBrowsing = currentPhase != null && activePhase !== currentPhase;
-  const tracking = currentWeek && !isBrowsing;
+  const tracking = currentWeek != null && !isBrowsing;
 
-  const allDaysComplete = useMemo(() => {
-    if (currentWeek == null || isBrowsing) return false;
-    return phases[currentPhase].days.every((d, i) =>
-      log.isDayComplete(currentWeek, currentPhase, i, d.exercises.length)
-    );
-  }, [phases, log, currentWeek, currentPhase, isBrowsing]);
-
-  const dayComplete = tracking
-    ? log.isDayComplete(currentWeek, activePhase, activeDay, day.exercises.length)
-    : false;
+  const dayExerciseIds = (d) => d.exercises.map((e) => e.id);
+  const dayComplete =
+    tracking && day ? log.isDayComplete(currentWeek, dayExerciseIds(day)) : false;
 
   useEffect(() => {
     if (dayComplete && session.active) session.stop();
   }, [dayComplete, session]);
 
-  const [titleHead, titleTail] = splitTitle(day.label);
-  const sessionLetter = String.fromCharCode(65 + activeDay);
+  if (!day) {
+    return <div className="section"><div className="loading-inline">Loading plan…</div></div>;
+  }
+
+  const accent = focusColors[day.focus] || 'var(--accent)';
+  const hasExercises = day.exercises.length > 0;
   const estMinutes = Math.max(20, day.exercises.length * 10);
   const weekDisplay = currentWeek ?? 1;
 
-  return (
-    <div className="section-content">
-      {!currentWeek && (
-        <div className="idle-banner">
-          <div className="idle-banner-text">
-            <b>Track your 12-week block.</b> Start the plan to log workouts.
-          </div>
-          <button className="btn btn--primary" onClick={startPlan}>Start Plan →</button>
-        </div>
-      )}
+  // Match position (in-season programs carry a match commitment)
+  const matchIdx = matchDayIndexOf(phase.days);
+  const selectedMatch = matchPosition(activeDay, matchIdx);
+  const todayMatch = matchPosition(TODAY_INDEX, matchIdx);
 
-      <div className="hero">
-        <div>
-          <div className="hero-eyebrow">
-            Week {String(weekDisplay).padStart(2, '0')} / {totalWeeks} · {phase.label}
+  // Equipment availability for the selected day's real date (this week)
+  const dayDateISO = addDays(today, activeDay - TODAY_INDEX);
+  const fullKit = isFullKit(dayDateISO);
+
+  // Smart rest default for the day's primary goal
+  const dayRest = suggestedRest(day.focus, day.exercises[0]?.reps);
+
+  return (
+    <div className="section">
+      <div className="status-bar">
+        <div className="status-program">{activeProgram?.name ?? 'Training'}</div>
+        {currentWeek != null ? (
+          <div className="status-meta">
+            <span className="status-week">
+              Week <b>{String(weekDisplay).padStart(2, '0')}</b>
+              {totalWeeks ? ` / ${totalWeeks}` : ''}
+            </span>
+            {multiPhase && <span className="status-phase">{phase.label}</span>}
           </div>
-          <h1 className="hero-title">
-            {titleHead}{titleTail && ' — '}
-            {titleTail && <em>{titleTail}</em>}
-          </h1>
-          <div className="hero-sub">{day.focus}</div>
-        </div>
+        ) : (
+          <button className="btn btn--primary btn--sm" onClick={() => startPlan()}>Start plan</button>
+        )}
       </div>
 
-      <div className="phase-progress">
-        <div className="phase-progress-track">
-          {Array.from({ length: totalWeeks }, (_, i) => {
-            const w = i + 1;
-            const cls = currentWeek == null
-              ? ''
-              : w < currentWeek ? 'is-done'
-              : w === currentWeek ? 'is-current'
-              : '';
-            return <div key={w} className={`phase-progress-seg ${cls}`} />;
-          })}
-        </div>
-        <div className="phase-progress-labels">
+      {tracking && (
+        <ReadinessCard
+          userId={userId}
+          date={today}
+          programType={activeProgram?.type}
+          match={todayMatch}
+        />
+      )}
+
+      {multiPhase && (
+        <div className="phase-tabs">
           {phases.map((p, i) => (
             <button
               key={p.name}
-              className={i === activePhase ? 'is-active' : ''}
+              className={`phase-tab${i === activePhase ? ' is-active' : ''}`}
               onClick={() => { setActivePhase(i); setActiveDay(0); }}
             >
-              P{i + 1} · {p.label.split(' ')[0].toUpperCase()}
+              <span className="phase-tab-num">P{i + 1}</span>
+              <span className="phase-tab-label">{p.label}</span>
             </button>
           ))}
         </div>
-      </div>
+      )}
 
-      {/* Browsing banner */}
       {isBrowsing && (
         <div className="browsing-banner">
-          <span>Browsing {phases[activePhase].name}</span>
-          <button onClick={() => { setActivePhase(currentPhase); setActiveDay(0); }}>
-            ← Back to Week {currentWeek}
-          </button>
+          <span>Previewing {phases[activePhase].name} — not your current week</span>
+          <button onClick={() => { setActivePhase(currentPhase); setActiveDay(0); }}>Back to current</button>
         </div>
       )}
 
-      {/* 7-day strip */}
-      <div className="week-strip">
+      <div className="week-rail">
         {phase.days.map((d, i) => {
-          const complete = tracking
-            ? log.isDayComplete(currentWeek, activePhase, i, d.exercises.length)
+          const complete = tracking && d.exercises.length > 0
+            ? log.isDayComplete(currentWeek, dayExerciseIds(d))
             : false;
           const isToday = !isBrowsing && DAY_TO_INDEX[d.day] === TODAY_INDEX;
-          const cls = [
-            'day-card',
-            i === activeDay && 'is-active',
-            complete && 'is-done',
-          ].filter(Boolean).join(' ');
+          const dAccent = focusColors[d.focus] || 'var(--text-3)';
           return (
-            <button key={d.day} className={cls} onClick={() => setActiveDay(i)}>
-              <div className="day-card-day">{d.day}</div>
-              <div className="day-card-label">{splitTitle(d.label)[0]}</div>
-              <div className="day-card-foot">
-                <span className="day-card-dot" />
-                {isToday && <span className="day-card-today">TODAY</span>}
-                {complete && !isToday && <span className="day-card-today">DONE</span>}
-              </div>
+            <button
+              key={d.day}
+              className={`day-pill${i === activeDay ? ' is-active' : ''}${complete ? ' is-done' : ''}`}
+              onClick={() => setActiveDay(i)}
+            >
+              <span className="day-pill-name">{DAY_SHORT[d.day]}</span>
+              <span className="day-pill-dot" style={{ background: dAccent }} />
+              {isToday && <span className="day-pill-today">Today</span>}
+              {complete && !isToday && <span className="day-pill-check">✓</span>}
             </button>
           );
         })}
-        {/* Sunday rest filler */}
-        <div className="day-card is-rest">
-          <div className="day-card-day">SUN</div>
-          <div className="day-card-label">Rest</div>
-          <div className="day-card-foot"><span className="day-card-dot" /></div>
-        </div>
       </div>
 
-      {/* Session block */}
-      <div className="session">
-        <div className="session-head">
-          <div className="session-head-left">
-            <div className="session-icon">{sessionLetter}</div>
-            <div>
-              <div className="session-name">
-                Session {sessionLetter} · <b>{day.focus.toUpperCase()}</b>
-              </div>
-              <div className="session-meta">
-                <b>{day.exercises.length}</b> exercises · ~{estMinutes} min
-              </div>
+      <div className="day-panel">
+        <div className="day-head">
+          <div className="day-head-info">
+            <div className="day-tags">
+              <span className="day-focus" style={{ color: accent }}>{day.focus}</span>
+              {selectedMatch && (
+                <span className={`md-tag md-tag--${selectedMatch.phase}`}>{selectedMatch.label}</span>
+              )}
+            </div>
+            <h1 className="day-title">{dayTitle(day.label)}</h1>
+            <div className="day-sub">
+              {hasExercises
+                ? `${day.exercises.length} exercises · ~${estMinutes} min`
+                : 'No personal work scheduled'}
             </div>
           </div>
-          <div className="session-actions">
-            <button className="btn btn--ghost" onClick={() => setShowTimer(true)}>
-              ⏱ Rest Timer · 90s
-            </button>
-            {tracking && allDaysComplete && currentWeek < totalWeeks ? (
-              <button className="btn btn--primary" onClick={completeWeek}>
-                Next Week →
-              </button>
-            ) : tracking && dayComplete ? (
-              <span className="btn btn--primary" style={{ pointerEvents: 'none' }}>
-                Day Complete ✓
-              </span>
+          <div className="day-actions">
+            <button className="btn btn--ghost" onClick={() => setShowTimer(true)}>Timer</button>
+            {tracking && hasExercises && dayComplete ? (
+              <span className="btn btn--done">Complete ✓</span>
             ) : session.active ? (
-              <button className="btn btn--primary" onClick={session.stop}>
-                ■ End · {formatElapsed(session.elapsedSec)}
-              </button>
+              <button className="btn btn--primary" onClick={session.stop}>End · {formatElapsed(session.elapsedSec)}</button>
             ) : (
               <button
                 className="btn btn--primary"
                 onClick={session.start}
-                disabled={!tracking}
+                disabled={!tracking || !hasExercises}
               >
-                Start Session →
+                Start session
               </button>
             )}
           </div>
         </div>
 
-        <div className="ex-list">
-          {day.exercises.map((ex, i) => (
-            <ExerciseRow
-              key={ex.id ?? ex.name}
-              ex={ex}
-              exIndex={i}
-              week={currentWeek}
-              phaseIndex={activePhase}
-              dayIndex={activeDay}
-              log={log}
-              isBrowsing={isBrowsing}
-            />
-          ))}
-        </div>
-
-        {day.coachNote && (
-          <div className="coach-note coach-note--day">
-            <div className="coach-avatar">{COACH_INITIALS}</div>
-            <div className="coach-note-body">
-              <div className="coach-note-label">Day Note · {day.day}</div>
-              <div className="coach-note-text">{day.coachNote}</div>
-            </div>
+        {day.commitments?.length > 0 && (
+          <div className="commitments">
+            {day.commitments.map((c) => <CommitmentRow key={c.id} commitment={c} />)}
           </div>
         )}
 
-        <div className="coach-note">
-          <div className="coach-avatar">{COACH_INITIALS}</div>
-          <div className="coach-note-body">
-            <div className="coach-note-label">{COACH_NAME} · Phase Note</div>
-            <div className="coach-note-text">{coachNotes[activePhase]}</div>
+        {hasExercises && (
+          <div className="ex-list">
+            {day.exercises.map((ex) => {
+              const equip = !fullKit ? equipmentInfo(ex.name) : { needsBarbell: false };
+              const multiSet = parseInt(ex.sets, 10) > 1;
+              return (
+                <ExerciseRow
+                  key={ex.id ?? ex.name}
+                  ex={ex}
+                  week={currentWeek}
+                  log={log}
+                  tracked={tracking}
+                  accent={accent}
+                  restSec={multiSet ? suggestedRest(day.focus, ex.reps) : null}
+                  equip={equip}
+                  last={tracking ? log.lastEntryFor(currentWeek, ex.id) : null}
+                />
+              );
+            })}
           </div>
-        </div>
+        )}
       </div>
 
-      {currentWeek && (
-        <div className="footer-bar">
+      {currentWeek != null && (
+        <div className="section-footer">
           <button
             className="reset-btn"
             onClick={() => {
-              if (confirm('Reset plan? All workout logs will be cleared.')) {
+              if (confirm('Reset plan? This unschedules the program. Logged weights are kept.')) {
                 resetPlan();
-                log.clearLog();
               }
             }}
           >
-            ↺ Reset Plan
+            Reset plan
           </button>
         </div>
       )}
 
-      {showTimer && <RestTimer onClose={() => setShowTimer(false)} />}
+      {showTimer && <RestTimer onClose={() => setShowTimer(false)} defaultSeconds={dayRest} />}
     </div>
   );
 }

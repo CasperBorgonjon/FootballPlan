@@ -1,6 +1,18 @@
 import { useState } from 'react';
 import { nutritionData } from '../data/nutrition';
+import { useToday } from '../hooks/useToday';
 import Pill from './ui/Pill';
+
+function nutritionContext(today) {
+  if (!today.scheduled || !today.day) return null;
+  if (today.match?.phase === 'match') {
+    return { fuel: 'training', text: 'Match day — fuel up, hydrate, eat your pre-match meal early.' };
+  }
+  if (today.dayType === 'rest') {
+    return { fuel: 'rest', text: `Rest day · ${today.day.focus} — leaner intake, protein stays high.` };
+  }
+  return { fuel: 'training', text: `${today.day.focus} session today — training-day fuel.` };
+}
 
 function FoodSection({ sec }) {
   const isAvoid = sec.name.includes('Avoid');
@@ -22,15 +34,19 @@ function FoodSection({ sec }) {
   );
 }
 
-export default function NutritionSection() {
-  const [foodDay, setFoodDay] = useState('training');
-  const [activeCat, setActiveCat] = useState('wake');
+export default function NutritionSection({ userId }) {
+  const today = useToday(userId);
+  const ctx = nutritionContext(today);
+  const [manual, setManual] = useState(null);
+
+  const foodDay = manual ?? ctx?.fuel ?? 'training';
+  const [activeCat, setActiveCat] = useState(nutritionData.training.categories[0].id);
 
   const data = nutritionData[foodDay];
   const cat = data.categories.find((c) => c.id === activeCat) || data.categories[0];
 
   function handleFoodDay(type) {
-    setFoodDay(type);
+    setManual(type);
     setActiveCat(nutritionData[type].categories[0].id);
   }
 
@@ -44,6 +60,13 @@ export default function NutritionSection() {
           </h1>
         </div>
       </div>
+
+      {ctx && (
+        <div className="today-banner">
+          <span className="today-banner-tag">Today</span>
+          <span className="today-banner-text">{ctx.text}</span>
+        </div>
+      )}
 
       <div className="nutrition-toggle">
         <Pill active={foodDay === 'training'} onClick={() => handleFoodDay('training')}>
