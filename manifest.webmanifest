@@ -1,0 +1,19 @@
+{
+  "name": "Plan — Training Console",
+  "short_name": "Plan",
+  "description": "Your training, fuel and recovery — auto-regulated around your week.",
+  "start_url": "/FootballPlan/",
+  "scope": "/FootballPlan/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0C0B",
+  "theme_color": "#0A0C0B",
+  "icons": [
+    {
+      "src": "/FootballPlan/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
