@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { usePlan } from '../hooks/usePlan';
 import { resolveActiveProgram, daysBetween, toISODate, getTotalWeeks } from '../utils/schedule';
 import ProgramEditor from './ProgramEditor';
+import ProgramGenerator from './ProgramGenerator';
 import { blankProgram } from '../utils/programTemplate';
 
 const TYPE_LABEL = { linear: 'Linear', repeating: 'Repeating' };
@@ -73,12 +74,24 @@ export default function ProgramsSection({ userId }) {
     createProgram, updateProgram, deleteProgram,
   } = usePlan(userId);
   const [editing, setEditing] = useState(null); // { program, isNew } | null
+  const [generating, setGenerating] = useState(false);
 
   const activeId = resolveActiveProgram(programs, today)?.id ?? null;
   const existingIds = programs.map((p) => p.id);
 
   if (loading) {
     return <div className="section"><div className="loading-inline">Loading programs…</div></div>;
+  }
+
+  if (generating) {
+    return (
+      <div className="section-content">
+        <ProgramGenerator
+          onCancel={() => setGenerating(false)}
+          onGenerate={(program) => { setGenerating(false); setEditing({ program, isNew: true }); }}
+        />
+      </div>
+    );
   }
 
   if (editing) {
@@ -119,9 +132,14 @@ export default function ProgramsSection({ userId }) {
         </div>
       </div>
 
-      <button className="btn btn--primary new-program" onClick={() => setEditing({ program: blankProgram(), isNew: true })}>
-        + New program
-      </button>
+      <div className="program-cta-row">
+        <button className="btn btn--primary new-program" onClick={() => setGenerating(true)}>
+          ✨ Generate a program
+        </button>
+        <button className="btn new-program" onClick={() => setEditing({ program: blankProgram(), isNew: true })}>
+          + Start from scratch
+        </button>
+      </div>
 
       <div className="program-list">
         {programs.map((p) => (

@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { supabase } from './lib/supabase';
 import TrainingSection from './components/TrainingSection';
 import ProgramsSection from './components/ProgramsSection';
+import GuideSection from './components/GuideSection';
 import ProgressSection from './components/ProgressSection';
 import NutritionSection from './components/NutritionSection';
 import RecoverySection from './components/RecoverySection';
@@ -12,6 +13,7 @@ import MainNav from './components/MainNav';
 const SECTIONS = [
   { id: 'training', label: 'Training',  icon: '⚽', Component: TrainingSection,  needsUser: true },
   { id: 'plan',     label: 'Plan',      icon: '🗓', Component: ProgramsSection,  needsUser: true },
+  { id: 'guide',    label: 'Guide',     icon: '🎓', Component: GuideSection,     needsUser: false },
   { id: 'progress', label: 'Progress',  icon: '📈', Component: ProgressSection,  needsUser: true },
   { id: 'food',     label: 'Nutrition', icon: '🥗', Component: NutritionSection, needsUser: true },
   { id: 'recovery', label: 'Recovery',  icon: '🔋', Component: RecoverySection,  needsUser: true },

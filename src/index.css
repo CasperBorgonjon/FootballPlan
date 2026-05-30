@@ -673,6 +673,16 @@ input { font-family: inherit; }
 .new-program { align-self: flex-start; }
 .program-actions-spacer { flex: 1; }
 
+.program-cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Program generator wizard */
+.gen-step { display: flex; flex-direction: column; gap: 10px; }
+.gen-q { font-family: var(--display); font-size: 18px; font-weight: 700; letter-spacing: 0.01em; }
+.gen-seg { align-self: flex-start; flex-wrap: wrap; }
+.gen-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.gen-step .edit-hint { margin-top: 2px; }
+.gen-cta { align-self: flex-start; font-size: 15px; padding: 13px 24px; }
+
 .editor { display: flex; flex-direction: column; gap: 14px; }
 .editor-bar {
   position: sticky; top: 57px; z-index: 20;
