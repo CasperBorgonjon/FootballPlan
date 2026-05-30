@@ -24,3 +24,10 @@ dist-ssr
 *.sw?
 /casper-source
 CLAUDE.md
+
+# Claude Code local (machine-specific) settings
+.claude/settings.local.json
+
+# Personal plan working files
+plan.txt
+plan-export.json
