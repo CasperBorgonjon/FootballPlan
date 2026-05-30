@@ -1,0 +1,1 @@
+import{t as e}from"./react-aUCDnuas.js";var t=e();function n({active:e,onClick:n,className:r=``,children:i,...a}){return(0,t.jsx)(`button`,{className:`pill${e?` is-active`:``} ${r}`.trim(),onClick:n,...a,children:i})}export{n as t};

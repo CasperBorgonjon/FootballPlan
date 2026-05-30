@@ -1,0 +1,1 @@
+import{t as e}from"./react-aUCDnuas.js";var t=e();function n({children:e,style:n,...r}){return(0,t.jsx)(`span`,{className:`badge`,style:n,...r,children:e})}export{n as t};
