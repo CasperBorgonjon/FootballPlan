@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { usePlan } from '../hooks/usePlan';
+import { usePlan } from '../contexts/PlanContext';
 import { useProgressData, parseLogKey } from '../hooks/useProgressData';
 import { readinessFrom } from '../utils/coaching';
 import Sparkline from './Sparkline';
@@ -15,7 +15,7 @@ function StatCard({ label, value, sub }) {
 }
 
 export default function ProgressSection({ userId }) {
-  const { programs, activeProgram, loading: planLoading } = usePlan(userId);
+  const { programs, activeProgram, loading: planLoading } = usePlan();
   const { log, checkins, loading } = useProgressData(userId);
   const [picked, setPicked] = useState(null);
 

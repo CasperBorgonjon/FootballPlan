@@ -7,11 +7,21 @@ Ordered by leverage. Nothing here is urgent — it's a roadmap, not a fire.
 Legend: **P0** = do before building much more · **P1** = worth doing soon ·
 **P2** = nice to have / optional.
 
+> **Status (2026-05-30):** P0 and the structural P1s are **done** — #1 PlanProvider,
+> #2 dead code, #3 `dates.js`, #4 tests (Vitest, 32 passing), #5 `domain.js`,
+> #6 README SQL. The remaining open items are all **P2 / optional** (#7–#10).
+> Each completed section is marked ✅ below.
+
 ---
 
 ## P0 — Structural
 
-### 1. Single source of truth for programs (`PlanProvider` context)
+### 1. Single source of truth for programs (`PlanProvider` context) — ✅ DONE
+Implemented as `src/contexts/PlanContext.jsx` (mirrors `AuthContext`), mounted
+once in `App.jsx` inside `AuthProvider`. `usePlan()` is now a zero-arg context
+consumer; the old `src/hooks/usePlan.js` was removed. The 5 consumers no longer
+fetch/seed independently.
+
 **Problem.** `usePlan(userId)` is called independently in five places —
 `TrainingSection`, `ProgramsSection`, `ProgressSection`, and `useToday` (which
 both `NutritionSection` and `RecoverySection` use). Each call:
@@ -32,7 +42,12 @@ consumer; wrap in `src/App.jsx`; update the 5 consumers.
 **Effort.** Medium. **Payoff.** High — correctness (one consistent state) +
 fewer network calls.
 
-### 2. Delete dead code
+### 2. Delete dead code — ✅ DONE
+Removed all four stub hooks and the unused `training.js` exports
+(`TOTAL_WEEKS`, `getPhaseForWeek`). Profile / photo-log / body-metrics intent is
+tracked in the project roadmap (memory) rather than left as misleading stubs —
+when profile persistence is built it gets a real, wired hook.
+
 Unused stub hooks with no importers anywhere:
 - `src/hooks/usePhotoLog.js`
 - `src/hooks/useProfile.js`
@@ -51,7 +66,11 @@ body metrics), track them as issues instead of leaving stubs that look wired.
 
 ## P1 — Consistency & safety
 
-### 3. Consolidate duplicated helpers/constants
+### 3. Consolidate duplicated helpers/constants — ✅ DONE
+`src/utils/dates.js` now owns `toLocalDate`, `weekdayIndex`, `DAY_TO_INDEX`,
+`DAY_SHORT`; `schedule.js`, `useToday`, `TrainingSection`, and `equipment.js`
+import from it. No more duplicated weekday math.
+
 - `DAY_TO_INDEX` / `TODAY_INDEX` are defined in **both** `TrainingSection.jsx`
   and `useToday.js`.
 - `toLocalDate` exists in **both** `schedule.js` and `equipment.js`.
@@ -62,7 +81,12 @@ body metrics), track them as issues instead of leaving stubs that look wired.
 Import everywhere. **Effort.** Low. **Payoff.** Medium — one place to fix a
 date bug.
 
-### 4. Tests for the load-bearing pure logic
+### 4. Tests for the load-bearing pure logic — ✅ DONE
+Vitest added (`npm test` / `npm run test:run`). `schedule.test.js` and
+`coaching.test.js` cover `resolvePosition` (linear/repeating/clamp),
+`resolveActiveProgram` (none/one/overlap), `readinessFrom` thresholds,
+`matchPosition` offsets, and `suggestedRest` — 32 tests passing.
+
 `schedule.js` (calendar → week/phase/day, active-program resolution, overlap
 "latest start wins") and `coaching.js` (readiness scoring, match position,
 suggested rest) are pure and **high-risk**: a subtle off-by-one in week math
@@ -78,7 +102,11 @@ silently shows the wrong day.
 **Effort.** Low–medium. **Payoff.** High — these are exactly the functions you'll
 keep editing.
 
-### 5. Centralize the domain vocabulary
+### 5. Centralize the domain vocabulary — ✅ DONE
+`src/data/domain.js` exports `FOCUS_TYPES`, `DEFAULT_FOCUS_COLORS`, and
+`WEEKDAYS`; `ProgramEditor`, `programTemplate`, and `programGenerator` import
+them instead of re-typing literals.
+
 Focus types (`Strength/Power/Speed/Endurance/Recovery`), equipment types, and
 day keys are string literals scattered across `coaching.js`, `equipment.js`,
 `exerciseLibrary.js`, `ProgramEditor.jsx`, and `focusColors`. A typo
@@ -87,7 +115,10 @@ day keys are string literals scattered across `coaching.js`, `equipment.js`,
 **Fix.** A small `src/data/constants.js` (or `domain.js`) exporting the
 canonical lists; import them. **Effort.** Low. **Payoff.** Medium.
 
-### 6. `workout_log` is assumed but undocumented
+### 6. `workout_log` is assumed but undocumented — ✅ DONE
+README now has the full `CREATE TABLE workout_log` + RLS + grant block alongside
+the other tables.
+
 The app reads/writes `workout_log` but the table isn't in the setup SQL (only
 `programs` and `daily_checkin` are). A fresh environment would break.
 
@@ -130,8 +161,12 @@ Medium for future-you.
 - Component-library adoption — the bespoke CSS is cohesive and small.
 
 ## Suggested order if/when you act
-1. **#2 dead code** (5 min, clears noise) →
-2. **#3 helpers** + **#5 constants** (small, enables the rest) →
-3. **#1 PlanProvider** (the real architectural win) →
-4. **#4 tests** (lock it in) →
-5. **#6 README SQL**, then P2 as desired.
+1. ✅ **#2 dead code** (5 min, clears noise) →
+2. ✅ **#3 helpers** + **#5 constants** (small, enables the rest) →
+3. ✅ **#1 PlanProvider** (the real architectural win) →
+4. ✅ **#4 tests** (lock it in) →
+5. ✅ **#6 README SQL** — all done. P2 (#7–#10) remain, optional.
+
+The natural next pick from P2 is **#10 JSDoc typedefs** for `Program` / `Phase` /
+`Day` / `Exercise` — cheap documentation + editor autocomplete for the core data
+model, now that the domain vocabulary lives in one place (`domain.js`).

@@ -165,7 +165,25 @@ create policy "own metrics" on metrics for all to authenticated
 grant select, insert, update, delete on public.metrics to authenticated;
 ```
 
-The app also uses a `workout_log` table (weights/reps/done, keyed `{programId}_w{week}_{exerciseId}`). If it doesn't exist yet, create one with `(user_id uuid, log_key text, done bool, weight text, reps text, updated_at timestamptz, primary key (user_id, log_key))`, RLS + the same grant. Logging is offline-safe: edits are cached in `localStorage` and synced when back online.
+```sql
+-- Per-exercise log: weights / reps / done (Training section)
+-- log_key format: {programId}_w{week}_{exerciseId} — see src/utils/logKey.js
+create table workout_log (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  log_key text not null,
+  done boolean default false,
+  weight text,
+  reps text,
+  updated_at timestamptz default now(),
+  primary key (user_id, log_key)
+);
+alter table workout_log enable row level security;
+create policy "own workout log" on workout_log for all to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+grant select, insert, update, delete on public.workout_log to authenticated;
+```
+
+Logging is offline-safe: edits are cached in `localStorage` and synced when back online.
 
 ### Install as a phone app
 

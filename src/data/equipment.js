@@ -23,21 +23,14 @@ export function equipmentInfo(exerciseName) {
   return swap ? { needsBarbell: true, swap } : { needsBarbell: false, swap: null };
 }
 
+import { toLocalDate, weekdayIndex } from '../utils/dates';
+
 // Winter break — a mini full-equipment build block. Edit to your real dates.
 export const WINTER_BREAK = { start: '2026-12-15', end: '2027-01-11' };
 
-function toLocal(value) {
-  if (value instanceof Date) return new Date(value.getFullYear(), value.getMonth(), value.getDate());
-  const [y, m, d] = String(value).split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
-
 // Full kit available on this date? Weekend (Sat/Sun) or inside the winter break.
 export function isFullKit(date, winter = WINTER_BREAK) {
-  const d = toLocal(date);
-  const weekday = (d.getDay() + 6) % 7; // Mon=0 … Sun=6
-  if (weekday >= 5) return true;
-  const start = toLocal(winter.start);
-  const end = toLocal(winter.end);
-  return d >= start && d <= end;
+  if (weekdayIndex(date) >= 5) return true; // Sat/Sun
+  const d = toLocalDate(date);
+  return d >= toLocalDate(winter.start) && d <= toLocalDate(winter.end);
 }

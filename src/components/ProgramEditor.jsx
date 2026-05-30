@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { DEFAULT_FOCUS_COLORS, slugify } from '../utils/programTemplate';
+import { slugify } from '../utils/programTemplate';
+import { FOCUS_TYPES, WEEKDAYS, DEFAULT_FOCUS_COLORS } from '../data/domain';
 import ExercisePicker from './ExercisePicker';
-
-const FOCUS_OPTIONS = ['Strength', 'Power', 'Speed', 'Endurance', 'Recovery'];
-const WEEKDAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
 const genId = () => `ex_${Math.random().toString(36).slice(2, 9)}`;
 const genCid = () => `c_${Math.random().toString(36).slice(2, 9)}`;
@@ -139,7 +137,7 @@ export default function ProgramEditor({ program, isNew, existingIds, onSave, onC
                 <input className="day-label-input" type="text" value={day.label}
                   onChange={(e) => setDay(pi, di, { label: e.target.value })} placeholder="Day label" />
                 <select value={day.focus} onChange={(e) => setDay(pi, di, { focus: e.target.value })}>
-                  {FOCUS_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
+                  {FOCUS_TYPES.map((f) => <option key={f} value={f}>{f}</option>)}
                 </select>
                 <button className="mini-btn mini-btn--del" onClick={() => removeDay(pi, di)}>✕</button>
               </div>

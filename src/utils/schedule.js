@@ -5,15 +5,9 @@
 // Positioning is calendar-driven: "what do I do today" is derived from the
 // program's start_date, never from a stored week counter.
 
-// Parse a 'YYYY-MM-DD' (or Date) into a local date at midnight, so day math
-// isn't thrown off by timezones / DST.
-function toLocalDate(value) {
-  if (value instanceof Date) {
-    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
-  }
-  const [y, m, d] = String(value).split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
+import { toLocalDate, weekdayIndex } from './dates';
+
+export { weekdayIndex };
 
 // Whole days from a to b (b - a). Negative if b is before a.
 export function daysBetween(a, b) {
@@ -34,11 +28,6 @@ export function addDays(date, n) {
   const d = toLocalDate(date);
   d.setDate(d.getDate() + n);
   return toISODate(d);
-}
-
-// Monday-indexed weekday (MON=0 … SUN=6) to match the plan's day order.
-export function weekdayIndex(date = new Date()) {
-  return (toLocalDate(date).getDay() + 6) % 7;
 }
 
 export function phasesOf(program) {

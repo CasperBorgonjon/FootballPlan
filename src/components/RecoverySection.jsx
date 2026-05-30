@@ -42,7 +42,7 @@ function RecoveryCard({ card }) {
 }
 
 export default function RecoverySection({ userId }) {
-  const today = useToday(userId);
+  const today = useToday();
   const { checkin } = useReadiness(userId);
   const focus = recoveryFocus(today, readinessFrom(checkin)?.level);
   const [activeTab, setActiveTab] = useState('sleep');

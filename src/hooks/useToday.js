@@ -1,22 +1,20 @@
-import { usePlan } from './usePlan';
+import { usePlan } from '../contexts/PlanContext';
 import { matchDayIndexOf, matchPosition } from '../utils/coaching';
-
-const DAY_TO_INDEX = { MON: 0, TUE: 1, WED: 2, THU: 3, FRI: 4, SAT: 5, SUN: 6 };
-const TODAY_INDEX = (new Date().getDay() + 6) % 7;
+import { DAY_TO_INDEX, weekdayIndex } from '../utils/dates';
 
 // Derives today's training context from the active (scheduled) program so other
 // sections (nutrition, recovery) can adapt to it.
-export function useToday(userId) {
-  const plan = usePlan(userId);
-  const { phases, currentPhase, currentWeek, activeProgram, loading } = plan;
+export function useToday() {
+  const { phases, currentPhase, currentWeek, activeProgram, loading } = usePlan();
 
   if (currentWeek == null || !phases.length) {
     return { scheduled: false, loading, programName: activeProgram?.name ?? null };
   }
 
+  const todayIndex = weekdayIndex();
   const phase = phases[currentPhase] ?? phases[0];
-  const day = phase.days.find((d) => DAY_TO_INDEX[d.day] === TODAY_INDEX) ?? null;
-  const match = matchPosition(TODAY_INDEX, matchDayIndexOf(phase.days));
+  const day = phase.days.find((d) => DAY_TO_INDEX[d.day] === todayIndex) ?? null;
+  const match = matchPosition(todayIndex, matchDayIndexOf(phase.days));
 
   let dayType = 'rest';
   if (day) {

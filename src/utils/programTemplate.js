@@ -1,10 +1,7 @@
 // Non-component helpers for the program editor — kept out of the component
 // file so fast-refresh stays happy.
 
-export const DEFAULT_FOCUS_COLORS = {
-  Strength: '#F59E0B', Endurance: '#38BDF8', Power: '#A78BFA',
-  Speed: '#FB923C', Recovery: '#6EE7B7',
-};
+import { DEFAULT_FOCUS_COLORS } from '../data/domain';
 
 export function blankProgram() {
   return {

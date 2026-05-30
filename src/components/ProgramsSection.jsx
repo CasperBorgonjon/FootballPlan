@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { usePlan } from '../hooks/usePlan';
+import { usePlan } from '../contexts/PlanContext';
 import { resolveActiveProgram, daysBetween, toISODate, getTotalWeeks } from '../utils/schedule';
 import ProgramEditor from './ProgramEditor';
 import ProgramGenerator from './ProgramGenerator';
@@ -68,11 +68,11 @@ function ProgramCard({ program, status, today, onSchedule, onUnschedule, onEdit,
   );
 }
 
-export default function ProgramsSection({ userId }) {
+export default function ProgramsSection() {
   const {
     programs, loading, today, scheduleProgram, resetPlan,
     createProgram, updateProgram, deleteProgram,
-  } = usePlan(userId);
+  } = usePlan();
   const [editing, setEditing] = useState(null); // { program, isNew } | null
   const [generating, setGenerating] = useState(false);
 

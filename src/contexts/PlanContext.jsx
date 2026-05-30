@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { DEFAULT_PROGRAMS } from '../data/seeds';
 import {
@@ -17,8 +17,10 @@ import {
 // "What do I do today" is resolved by date from the scheduled program — there
 // is no manual week counter.
 //
-// Return shape is preserved for components (phases/coachNotes/focusColors/
-// totalWeeks/getPhaseForWeek) plus calendar fields (currentWeek/currentPhase).
+// This used to be a hook called independently in ~5 places, each firing its own
+// fetch + seed and holding state that could drift. It's now a context mounted
+// once near the app root: fetch/seed happens a single time and every consumer
+// reads the same state via `usePlan()`.
 
 const DEFAULT_REPEATING_WEEKS = 30; // season length when scheduling a repeating program
 
@@ -32,7 +34,7 @@ async function loadPrograms(userId) {
     .order('sort_order', { ascending: true });
 
   if (error) {
-    console.error('[usePlan] failed to load programs:', error.message, error);
+    console.error('[PlanContext] failed to load programs:', error.message, error);
     return [];
   }
   if (data && data.length > 0) return data;
@@ -43,15 +45,20 @@ async function loadPrograms(userId) {
     .upsert(seeded, { onConflict: 'user_id,id' })
     .select();
   if (seedError) {
-    console.error('[usePlan] failed to seed default programs:', seedError.message, seedError);
+    console.error('[PlanContext] failed to seed default programs:', seedError.message, seedError);
     return [];
   }
   return inserted ?? seeded;
 }
 
-export function usePlan(userId, today = new Date()) {
+const PlanContext = createContext(null);
+
+export function PlanProvider({ userId, children }) {
   const [programs, setPrograms] = useState(null);
   const [loading, setLoading] = useState(true);
+  // One reference date for the whole tree, so every section positions the
+  // calendar identically within a render pass.
+  const today = useMemo(() => new Date(), []);
 
   const refetch = useCallback(async () => {
     if (!userId) return;
@@ -100,7 +107,7 @@ export function usePlan(userId, today = new Date()) {
       .eq('user_id', userId)
       .eq('id', programId);
     if (error) {
-      console.error('[usePlan] scheduleProgram failed:', error.message, error);
+      console.error('[PlanContext] scheduleProgram failed:', error.message, error);
       return;
     }
     await refetch();
@@ -117,7 +124,7 @@ export function usePlan(userId, today = new Date()) {
     const { error } = await supabase
       .from('programs')
       .insert({ ...program, user_id: userId, sort_order: list.length });
-    if (error) { console.error('[usePlan] createProgram failed:', error.message, error); return false; }
+    if (error) { console.error('[PlanContext] createProgram failed:', error.message, error); return false; }
     await refetch();
     return true;
   }
@@ -129,7 +136,7 @@ export function usePlan(userId, today = new Date()) {
       .update({ ...fields, updated_at: new Date().toISOString() })
       .eq('user_id', userId)
       .eq('id', id);
-    if (error) { console.error('[usePlan] updateProgram failed:', error.message, error); return false; }
+    if (error) { console.error('[PlanContext] updateProgram failed:', error.message, error); return false; }
     await refetch();
     return true;
   }
@@ -137,7 +144,7 @@ export function usePlan(userId, today = new Date()) {
   async function deleteProgram(id) {
     if (!userId) return false;
     const { error } = await supabase.from('programs').delete().eq('user_id', userId).eq('id', id);
-    if (error) { console.error('[usePlan] deleteProgram failed:', error.message, error); return false; }
+    if (error) { console.error('[PlanContext] deleteProgram failed:', error.message, error); return false; }
     await refetch();
     return true;
   }
@@ -153,7 +160,7 @@ export function usePlan(userId, today = new Date()) {
     await refetch();
   }
 
-  return {
+  const value = {
     programs: list,
     activeProgram: displayProgram,
     scheduledProgram,
@@ -175,4 +182,15 @@ export function usePlan(userId, today = new Date()) {
     deleteProgram,
     refetch,
   };
+
+  return <PlanContext.Provider value={value}>{children}</PlanContext.Provider>;
+}
+
+// Read the shared plan state. Must be called inside a <PlanProvider>.
+export function usePlan() {
+  const ctx = useContext(PlanContext);
+  if (ctx === null) {
+    throw new Error('usePlan must be used within a PlanProvider');
+  }
+  return ctx;
 }

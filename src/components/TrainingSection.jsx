@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { usePlan } from '../hooks/usePlan';
+import { usePlan } from '../contexts/PlanContext';
 import { useWorkoutLog } from '../hooks/useWorkoutLog';
 import { useReadiness } from '../hooks/useReadiness';
 import { useSession, formatElapsed } from '../hooks/useSession';
 import { addDays } from '../utils/schedule';
+import { DAY_TO_INDEX, DAY_SHORT, weekdayIndex } from '../utils/dates';
 import {
   readinessFrom, recommendation, matchPosition, matchDayIndexOf,
   suggestedRest, restLabel,
@@ -11,9 +12,7 @@ import {
 import { equipmentInfo, isFullKit } from '../data/equipment';
 import RestTimer from './RestTimer';
 
-const DAY_TO_INDEX = { MON: 0, TUE: 1, WED: 2, THU: 3, FRI: 4, SAT: 5, SUN: 6 };
-const DAY_SHORT = { MON: 'Mon', TUE: 'Tue', WED: 'Wed', THU: 'Thu', FRI: 'Fri', SAT: 'Sat', SUN: 'Sun' };
-const TODAY_INDEX = (new Date().getDay() + 6) % 7;
+const TODAY_INDEX = weekdayIndex();
 
 function dayTitle(label) {
   const idx = label.indexOf(' — ');
@@ -171,7 +170,7 @@ export default function TrainingSection({ userId }) {
   const {
     activeProgram, phases, focusColors, totalWeeks,
     currentWeek, currentPhase, today, startPlan, resetPlan,
-  } = usePlan(userId);
+  } = usePlan();
   const log = useWorkoutLog(userId, activeProgram?.id);
 
   const multiPhase = phases.length > 1;

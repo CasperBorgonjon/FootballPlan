@@ -34,8 +34,8 @@ function FoodSection({ sec }) {
   );
 }
 
-export default function NutritionSection({ userId }) {
-  const today = useToday(userId);
+export default function NutritionSection() {
+  const today = useToday();
   const ctx = nutritionContext(today);
   const [manual, setManual] = useState(null);
 

@@ -13,7 +13,7 @@
 // by the athlete's named weakness.
 
 import { EXERCISE_LIBRARY } from '../data/exerciseLibrary';
-import { DEFAULT_FOCUS_COLORS } from './programTemplate';
+import { DEFAULT_FOCUS_COLORS } from '../data/domain';
 
 const genId = () => `ex_${Math.random().toString(36).slice(2, 9)}`;
 

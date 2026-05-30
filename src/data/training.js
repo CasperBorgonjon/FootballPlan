@@ -245,13 +245,3 @@ export const trainingPlan = {
     },
   ],
 };
-
-// Derived constants. Anywhere code asks "how long is the block?" it should
-// read from here — never hard-code 10.
-export const TOTAL_WEEKS = trainingPlan.phases.at(-1).weeks.end;
-
-// Derived from data — adding a phase needs no code change here.
-export function getPhaseForWeek(week) {
-  const idx = trainingPlan.phases.findIndex((p) => week >= p.weeks.start && week <= p.weeks.end);
-  return idx === -1 ? trainingPlan.phases.length - 1 : idx;
-}
