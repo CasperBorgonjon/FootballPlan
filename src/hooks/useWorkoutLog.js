@@ -101,6 +101,28 @@ export function useWorkoutLog(userId, programId) {
     return best;
   }
 
+  // Heaviest weight ever logged for this exercise in OTHER weeks of the program.
+  // Used to flag a personal record when the current entry beats it.
+  function bestWeightBefore(week, exId) {
+    if (!programId) return 0;
+    const prefix = `${programId}_w`;
+    let best = 0;
+    for (const key in log) {
+      if (!key.startsWith(prefix)) continue;
+      const val = log[key];
+      if (!val || !val.weight) continue;
+      const rest = key.slice(prefix.length);
+      const us = rest.indexOf('_');
+      if (us < 0) continue;
+      const wk = Number(rest.slice(0, us));
+      const id = rest.slice(us + 1);
+      if (id !== exId || wk === week) continue;
+      const w = parseFloat(String(val.weight).replace(',', '.'));
+      if (Number.isFinite(w) && w > best) best = w;
+    }
+    return best;
+  }
+
   async function clearLog() {
     setLog({});
     if (lsKey) writeLS(lsKey, {});
@@ -108,5 +130,5 @@ export function useWorkoutLog(userId, programId) {
     await supabase.from('workout_log').delete().eq('user_id', userId);
   }
 
-  return { log, getEntry, updateEntry, toggleDone, isDayComplete, lastEntryFor, clearLog };
+  return { log, getEntry, updateEntry, toggleDone, isDayComplete, lastEntryFor, bestWeightBefore, clearLog };
 }

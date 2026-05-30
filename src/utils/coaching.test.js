@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   readinessFrom, recommendation, matchPosition, matchDayIndexOf,
-  suggestedRest, restLabel,
+  suggestedRest, restLabel, suggestProgression,
 } from './coaching';
 
 describe('readinessFrom', () => {
@@ -87,5 +87,28 @@ describe('restLabel', () => {
     expect(restLabel(180)).toBe('3 min');
     expect(restLabel(90)).toBe('90s');
     expect(restLabel(45)).toBe('45s');
+  });
+});
+
+describe('suggestProgression', () => {
+  const last = { weight: '80', reps: '5' };
+
+  it('adds load on a green day when reps were hit', () => {
+    expect(suggestProgression(last, 'green', '5')).toMatchObject({ dir: 'up', weight: 82.5 });
+  });
+  it('treats no check-in like green', () => {
+    expect(suggestProgression(last, null, '5').dir).toBe('up');
+  });
+  it('holds when last session missed reps', () => {
+    expect(suggestProgression({ weight: '80', reps: '3' }, 'green', '5')).toMatchObject({ dir: 'hold', weight: 80 });
+  });
+  it('holds on amber and backs off on red', () => {
+    expect(suggestProgression(last, 'amber', '5').dir).toBe('hold');
+    expect(suggestProgression(last, 'red', '5')).toMatchObject({ dir: 'down', weight: 72.5 });
+  });
+  it('returns null for time/distance work or no history', () => {
+    expect(suggestProgression({ weight: '0', reps: '30m' }, 'green', '30m')).toBeNull();
+    expect(suggestProgression(null, 'green', '5')).toBeNull();
+    expect(suggestProgression({ weight: '' }, 'green', '5')).toBeNull();
   });
 });

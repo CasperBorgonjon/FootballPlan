@@ -78,3 +78,27 @@ export function restLabel(sec) {
   if (sec >= 120) return `${Math.round(sec / 60)} min`;
   return `${sec}s`;
 }
+
+// ── Auto-regulated progression ───────────────────────────────────
+// Suggest the next working weight from the last logged set + today's readiness
+// level ('green'|'amber'|'red'|null). Conservative on purpose:
+//   • green / no check-in → add a little load, but only if last reps were hit;
+//   • amber → hold; red → back off ~10%.
+// Returns null for non-weighted, time/distance work (sprints, planks) or when
+// there's no usable weight history. `last` is { weight, reps } from the log.
+export function suggestProgression(last, level, targetReps) {
+  if (!last || last.weight == null || last.weight === '') return null;
+  const w = parseFloat(String(last.weight).replace(',', '.'));
+  if (!Number.isFinite(w) || w <= 0) return null;
+  const target = parseInt(targetReps, 10);
+  if (!Number.isFinite(target)) return null; // time/distance — no load progression
+
+  const round = (x) => Math.round(x / 2.5) * 2.5;
+  const lastReps = parseInt(last.reps, 10);
+  const hitReps = !Number.isFinite(lastReps) || lastReps >= target;
+
+  if (level === 'red') return { dir: 'down', weight: round(w * 0.9), reason: 'low readiness — back off' };
+  if (level === 'amber') return { dir: 'hold', weight: w, reason: 'keep it steady today' };
+  if (!hitReps) return { dir: 'hold', weight: w, reason: 'repeat — hit all your reps first' };
+  return { dir: 'up', weight: round(w + 2.5), reason: 'add a little load' };
+}

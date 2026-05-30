@@ -7,10 +7,11 @@ import { addDays } from '../utils/schedule';
 import { DAY_TO_INDEX, DAY_SHORT, weekdayIndex } from '../utils/dates';
 import {
   readinessFrom, recommendation, matchPosition, matchDayIndexOf,
-  suggestedRest, restLabel,
+  suggestedRest, restLabel, suggestProgression,
 } from '../utils/coaching';
 import { equipmentInfo, isFullKit } from '../data/equipment';
 import RestTimer from './RestTimer';
+import PlateCalculator from './PlateCalculator';
 
 const TODAY_INDEX = weekdayIndex();
 
@@ -96,10 +97,14 @@ function CommitmentRow({ commitment }) {
   );
 }
 
-function ExerciseRow({ ex, week, log, tracked, accent, restSec, equip, last }) {
+function ExerciseRow({ ex, week, log, tracked, accent, restSec, equip, last, level, bestPrior }) {
   const { getEntry, toggleDone, updateEntry } = log;
   const entry = tracked ? getEntry(week, ex.id) : null;
   const [editing, setEditing] = useState(false);
+
+  const suggestion = tracked ? suggestProgression(last, level, ex.reps) : null;
+  const curWeight = parseFloat(String(entry?.weight || '').replace(',', '.'));
+  const isPR = tracked && Number.isFinite(curWeight) && curWeight > 0 && bestPrior > 0 && curWeight > bestPrior;
 
   return (
     <div className={`ex-row${entry?.done ? ' is-done' : ''}`}>
@@ -125,12 +130,18 @@ function ExerciseRow({ ex, week, log, tracked, accent, restSec, equip, last }) {
       </div>
 
       <div className="ex-prescribe">
-        <span className="ex-sr">{ex.sets}<i>×</i>{ex.reps}</span>
-        {last ? (
+        <span className="ex-sr">{ex.sets}<i>×</i>{ex.reps}{isPR && <span className="ex-pr">🏆 PR</span>}</span>
+        {last && (
           <span className="ex-last">last {last.weight}kg{last.reps ? ` × ${last.reps}` : ''}</span>
-        ) : restSec ? (
+        )}
+        {suggestion && !entry?.done && (
+          <span className={`ex-suggest ex-suggest--${suggestion.dir}`} title={suggestion.reason}>
+            → {suggestion.weight}kg
+          </span>
+        )}
+        {!last && !suggestion && restSec && (
           <span className="ex-rest">rest {restLabel(restSec)}</span>
-        ) : null}
+        )}
       </div>
 
       <div className="ex-log">
@@ -172,10 +183,13 @@ export default function TrainingSection({ userId }) {
     currentWeek, currentPhase, today, startPlan, resetPlan,
   } = usePlan();
   const log = useWorkoutLog(userId, activeProgram?.id);
+  const { checkin } = useReadiness(userId, today);
+  const readinessLevel = readinessFrom(checkin)?.level ?? null;
 
   const multiPhase = phases.length > 1;
 
   const [showTimer, setShowTimer] = useState(false);
+  const [showPlates, setShowPlates] = useState(false);
   const [activePhase, setActivePhase] = useState(() => currentPhase ?? 0);
   const [activeDay, setActiveDay] = useState(() => Math.min(TODAY_INDEX, 6));
   const session = useSession(currentWeek, activePhase, activeDay);
@@ -308,6 +322,7 @@ export default function TrainingSection({ userId }) {
             </div>
           </div>
           <div className="day-actions">
+            <button className="btn btn--ghost" onClick={() => setShowPlates(true)}>Plates</button>
             <button className="btn btn--ghost" onClick={() => setShowTimer(true)}>Timer</button>
             {tracking && hasExercises && dayComplete ? (
               <span className="btn btn--done">Complete ✓</span>
@@ -347,6 +362,8 @@ export default function TrainingSection({ userId }) {
                   restSec={multiSet ? suggestedRest(day.focus, ex.reps) : null}
                   equip={equip}
                   last={tracking ? log.lastEntryFor(currentWeek, ex.id) : null}
+                  level={readinessLevel}
+                  bestPrior={tracking ? log.bestWeightBefore(currentWeek, ex.id) : 0}
                 />
               );
             })}
@@ -370,6 +387,7 @@ export default function TrainingSection({ userId }) {
       )}
 
       {showTimer && <RestTimer onClose={() => setShowTimer(false)} defaultSeconds={dayRest} />}
+      {showPlates && <PlateCalculator onClose={() => setShowPlates(false)} />}
     </div>
   );
 }
