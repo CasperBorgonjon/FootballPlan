@@ -17,7 +17,7 @@ function recoveryFocus(today, level) {
   if (m === 'taper') return { tab: 'sleep', title: 'Match tomorrow', text: 'Protect tonight’s sleep and last night’s — the two nights before matter most. Keep today light.' };
   if (m === 'match') return { tab: 'body', title: 'Match day', text: 'Fuel and warm up. Recovery starts after: rehydrate, easy flush, then sleep.' };
   if (m === 'recovery') return { tab: 'body', title: 'Day after the match', text: 'Soft tissue and easy movement to flush the legs. No hard training.' };
-  if (today.programType === 'linear' && [4, 8].includes(today.week)) {
+  if (today.deload || (today.programType === 'linear' && [4, 8].includes(today.week))) {
     return { tab: 'body', title: 'Deload week', text: 'Cut volume ~40%, keep intensity. This is where adaptation catches up — don’t skip it.' };
   }
   if (today.dayType === 'rest') return { tab: 'sleep', title: 'Rest day', text: 'Sleep and soft tissue do the work today.' };

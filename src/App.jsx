@@ -1,15 +1,19 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { PlanProvider } from './contexts/PlanContext';
 import { supabase } from './lib/supabase';
-import TrainingSection from './components/TrainingSection';
-import ProgramsSection from './components/ProgramsSection';
-import GuideSection from './components/GuideSection';
-import ProgressSection from './components/ProgressSection';
-import NutritionSection from './components/NutritionSection';
-import RecoverySection from './components/RecoverySection';
 import LoginPage from './components/LoginPage';
 import MainNav from './components/MainNav';
+
+// Sections are code-split: only the active one's bundle (and its data — plan,
+// nutrition, recovery, exercise library) is fetched, keeping the initial load
+// small. The rest load on demand when the user navigates to them.
+const TrainingSection = lazy(() => import('./components/TrainingSection'));
+const ProgramsSection = lazy(() => import('./components/ProgramsSection'));
+const GuideSection = lazy(() => import('./components/GuideSection'));
+const ProgressSection = lazy(() => import('./components/ProgressSection'));
+const NutritionSection = lazy(() => import('./components/NutritionSection'));
+const RecoverySection = lazy(() => import('./components/RecoverySection'));
 
 // needsUser: passes the authed userId to sections that still own per-user data
 // hooks (logs, readiness, progress). Plan/today data no longer needs it — it
@@ -56,7 +60,9 @@ function AppInner() {
       </header>
 
       <div className="page-content">
-        <ActiveComponent {...(active.needsUser ? { userId: user.id } : {})} />
+        <Suspense fallback={<div className="loading-inline">Loading…</div>}>
+          <ActiveComponent {...(active.needsUser ? { userId: user.id } : {})} />
+        </Suspense>
       </div>
 
       <MainNav sections={SECTIONS} active={activeId} onSelect={setActiveId} variant="bottom" />

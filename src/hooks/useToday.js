@@ -32,6 +32,7 @@ export function useToday() {
     dayType,
     match,
     week: currentWeek,
+    deload: !!phase.deload,
     programType: activeProgram?.type,
     programName: activeProgram?.name,
   };

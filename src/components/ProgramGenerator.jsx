@@ -64,8 +64,9 @@ export default function ProgramGenerator({ onGenerate, onCancel }) {
         <div className="hero-eyebrow">Generate</div>
         <h1 className="hero-title">Build my <em>program</em></h1>
         <div className="hero-sub">
-          Answer a few variables and the app applies the principles from the Guide — you’ll get a full
-          program in the editor to review and tweak before saving.
+          Answer a few variables and the app drafts a periodised program — phased blocks, a deload
+          after each, and exercises chosen for your kit and position. It opens in the editor as a
+          starting point to fine-tune before saving — not a finished prescription.
         </div>
       </div>
 
@@ -124,7 +125,10 @@ export default function ProgramGenerator({ onGenerate, onCancel }) {
             </select>
           </label>
         </div>
-        <p className="edit-hint">A weak point pulls in extra targeted prehab — the insurance that keeps you on the pitch.</p>
+        <p className="edit-hint">
+          Position adds extra emphasis on the day that matters most for your role (sprint, power,
+          strength or conditioning). A weak point pulls in extra targeted prehab.
+        </p>
       </div>
 
       <button className="btn btn--primary gen-cta" onClick={handleGenerate}>

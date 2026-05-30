@@ -4,13 +4,17 @@
 //
 //   { id, name, type, color, start_date, end_date,
 //     structure: { focusColors, coachNotes, phases: [{ name, label, weeks,
-//       weeksLabel, color, coachNote?, days: [{ day, label, focus, coachNote?,
-//       exercises: [{ id, name, sets, reps, note }] }] }] } }
+//       weeksLabel, color, deload?, coachNote?, days: [{ day, label, focus,
+//       coachNote?, exercises: [{ id, name, sets, reps, note }] }] }] } }
 //
-// The design encodes the principles from the Guide tab: a base → strength →
-// power/speed arc, speed/power placed on fresh days away from heavy lifting
-// (interference effect), rep schemes matched to the quality, and prehab driven
-// by the athlete's named weakness.
+// The design encodes the principles from the Guide tab:
+//  - a periodised base → strength → power/speed arc, where each phase genuinely
+//    differs (split, volume, and rep scheme change — not just the reps);
+//  - a planned deload week after each build block;
+//  - speed/power on fresh days, conditioning kept away from heavy lifting;
+//  - rep schemes matched to the quality;
+//  - prehab driven by the athlete's named weakness;
+//  - position-specific emphasis on the relevant day.
 
 import { EXERCISE_LIBRARY } from '../data/exerciseLibrary';
 import { DEFAULT_FOCUS_COLORS } from '../data/domain';
@@ -24,10 +28,10 @@ function isAvailable(ex, equipment) {
   return equipment.includes(ex.equipment);
 }
 
-// Pull the candidate pool for a slot, then take the first that hasn't been used
-// in this day yet (keeps a session varied). Returns null rather than repeating
-// an exercise — better a slightly shorter session the athlete fills in than a
-// day that lists the same drill three times (happens when equipment is sparse).
+// Pick the first library exercise matching a slot that hasn't been used yet
+// (the `used` set is shared across the whole week, so days stay varied and a
+// drill never repeats). Returns null rather than repeating — better a slightly
+// shorter session the athlete fills in than the same drill listed twice.
 function pickExercise(slot, equipment, used) {
   const pool = EXERCISE_LIBRARY.filter((ex) => {
     if (!isAvailable(ex, equipment)) return false;
@@ -49,16 +53,16 @@ const PRIMARY_SCHEME = {
 };
 
 // Conditioning swaps from aerobic base early to match-specific repeated sprints
-// late, mirroring the periodization arc.
+// late, mirroring the periodization arc. Several options per phase so a second
+// conditioning day (or a midfielder's extra) gets a different session.
 const COND_BY_PHASE = {
-  base:     ['Easy Run', 'Tempo Run'],
-  strength: ['Tempo Run', '30-30 Intervals'],
-  speed:    ['Repeated Sprints (RSA)', 'Hill Sprints'],
-  inseason: ['10-10-10 Run'],
+  base:     ['Easy Run', 'Tempo Run', 'Strides'],
+  strength: ['Tempo Run', '30-30 Intervals', 'Hill Sprints'],
+  speed:    ['Repeated Sprints (RSA)', 'Hill Sprints', '10-10-10 Run'],
+  inseason: ['10-10-10 Run', 'Repeated Sprints (RSA)'],
 };
 
 // A "day kind" → its focus tag, label, coaching rationale and slot recipe.
-// Slots are resolved against the library at generation time.
 const DAY_KINDS = {
   speed: {
     focus: 'Speed', label: 'Speed & Acceleration',
@@ -103,7 +107,6 @@ const DAY_KINDS = {
       { muscle: ['Speed & Agility'], type: ['Power'], role: 'power' },
       { muscle: ['Speed & Agility'], type: ['Power'], role: 'power' },
       { name: 'Pogo Hops' },
-      { muscle: ['Quads & Legs'], type: ['Strength'], role: 'primary' },
       { muscle: ['Core'], role: 'core' },
     ],
   },
@@ -123,13 +126,32 @@ const DAY_KINDS = {
   },
 };
 
-// Which day kinds make up the week, ordered for the interference effect:
-// speed first (fresh), conditioning last (away from quality work).
-const SPLITS = {
-  3: ['speed', 'lower', 'upper'],
-  4: ['speed', 'lower', 'upper', 'conditioning'],
-  5: ['speed', 'lower', 'power', 'upper', 'conditioning'],
-  6: ['speed', 'lower', 'power', 'upper', 'conditioning', 'recovery'],
+// Per-phase weekly split. Phases genuinely differ: base front-loads
+// conditioning and holds back power; strength introduces the power day; the
+// speed/peak phase adds sprint/power volume and drops a conditioning day. The
+// shared week-used set means a repeated kind (e.g. two speed days) still picks
+// different drills.
+const PHASE_SPLITS = {
+  3: {
+    base:     ['speed', 'lower', 'conditioning'],
+    strength: ['speed', 'lower', 'upper'],
+    speed:    ['speed', 'power', 'lower'],
+  },
+  4: {
+    base:     ['speed', 'lower', 'upper', 'conditioning'],
+    strength: ['speed', 'lower', 'upper', 'conditioning'],
+    speed:    ['speed', 'power', 'lower', 'upper'],
+  },
+  5: {
+    base:     ['speed', 'lower', 'upper', 'conditioning', 'conditioning'],
+    strength: ['speed', 'lower', 'power', 'upper', 'conditioning'],
+    speed:    ['speed', 'power', 'speed', 'lower', 'upper'],
+  },
+  6: {
+    base:     ['speed', 'lower', 'upper', 'conditioning', 'conditioning', 'recovery'],
+    strength: ['speed', 'lower', 'power', 'upper', 'conditioning', 'recovery'],
+    speed:    ['speed', 'power', 'speed', 'lower', 'upper', 'recovery'],
+  },
 };
 
 // Spread sessions across the week with rest between hard days.
@@ -140,12 +162,24 @@ const WEEKDAYS = {
   6: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
 };
 
-// Weakness → an extra prehab exercise to weave into the relevant day kinds.
+// Weakness → an extra prehab exercise woven into the relevant day kinds.
 const WEAKNESS_PREHAB = {
   hamstring: { name: 'Single-leg RDL', on: ['lower'] },
   groin:     { name: 'Band Adduction', on: ['lower', 'upper'] },
   ankle:     { name: 'Single-Leg Calf Raise', on: ['lower', 'speed'] },
-  aerobic:   null, // handled by adding conditioning volume, see below
+  aerobic:   null, // handled by adding a conditioning day in buildCoachNotes context
+};
+
+// Position → an extra emphasis slot on the day that matters most for the role,
+// plus a one-line rationale. This is what makes the position input actually
+// change the program rather than just annotate it.
+const POSITION_EMPHASIS = {
+  Fullback:    { day: 'speed', slot: { muscle: ['Speed & Agility'], type: ['Speed'], role: 'speed' }, note: 'Fullback: among the highest sprint distances on the pitch — extra max-speed work.' },
+  Winger:      { day: 'speed', slot: { muscle: ['Speed & Agility'], type: ['Speed'], role: 'speed' }, note: 'Winger: repeated max sprints win your duels — extra acceleration volume.' },
+  Striker:     { day: 'power', slot: { muscle: ['Speed & Agility'], type: ['Power'], role: 'power' }, note: 'Striker: first-step and jump power decide chances — extra explosive work.' },
+  Midfielder:  { day: 'conditioning', slot: { role: 'cond' }, note: 'Midfielder: the biggest engine on the team — extra conditioning.' },
+  'Centre-back': { day: 'lower', slot: { muscle: ['Quads & Legs', 'Glutes & Hips'], type: ['Strength'], role: 'accessory' }, note: 'Centre-back: strength and aerial power for duels — extra lower-body work.' },
+  Goalkeeper:  { day: 'upper', slot: { muscle: ['Upper Push', 'Upper Pull'], type: ['Strength'], role: 'accessory' }, note: 'Goalkeeper: pressing and pulling strength plus reactive power — extra upper work.' },
 };
 
 function exFromLib(lib, override = {}) {
@@ -159,27 +193,36 @@ function exFromLib(lib, override = {}) {
   };
 }
 
-// Build one day's exercise list for a given phase scheme.
-function buildDay(kind, phaseKey, equipment, weakness, weekday) {
+// Build one day's exercise list for a given phase scheme. `used` is shared
+// across the week so drills don't repeat day to day.
+function buildDay(kind, phaseKey, equipment, weakness, position, weekday, used) {
   const def = DAY_KINDS[kind];
-  const used = new Set();
   const exercises = [];
 
-  // Inject the weakness prehab if this day kind is a match.
+  let slots = def.slots;
+  // Weave in the weakness prehab on the days it belongs to.
   const wk = WEAKNESS_PREHAB[weakness];
-  const slots = wk && wk.on.includes(kind)
-    ? [...def.slots, { name: wk.name }]
-    : def.slots;
+  if (wk && wk.on.includes(kind)) slots = [...slots, { name: wk.name }];
+  // Add the position emphasis on its target day.
+  const pos = POSITION_EMPHASIS[position];
+  if (pos && pos.day === kind) slots = [...slots, pos.slot];
+
+  // The speed/peak phase trims accessory volume — you're expressing fitness,
+  // not building it.
+  const trimAccessories = phaseKey === 'speed';
 
   for (const slot of slots) {
+    if (trimAccessories && slot.role === 'accessory') continue;
+
     if (slot.role === 'cond') {
       const names = COND_BY_PHASE[phaseKey] ?? COND_BY_PHASE.base;
-      const name = names[exercises.length] ?? names[names.length - 1];
-      const lib = EXERCISE_LIBRARY.find((e) => e.name === name);
-      const ex = exFromLib(lib);
-      if (ex && !used.has(lib.id)) { used.add(lib.id); exercises.push(ex); }
+      const lib = names
+        .map((n) => EXERCISE_LIBRARY.find((e) => e.name === n))
+        .find((e) => e && !used.has(e.id));
+      if (lib) { used.add(lib.id); exercises.push(exFromLib(lib)); }
       continue;
     }
+
     const lib = pickExercise(slot, equipment, used);
     if (!lib) continue;
     used.add(lib.id);
@@ -187,35 +230,69 @@ function buildDay(kind, phaseKey, equipment, weakness, weekday) {
     exercises.push(exFromLib(lib, override));
   }
 
+  return { day: weekday, label: def.label, focus: def.focus, coachNote: def.note, exercises };
+}
+
+function buildDays(split, phaseKey, equipment, weakness, position) {
+  const days = WEEKDAYS[split.length] ?? WEEKDAYS[4];
+  const used = new Set(); // shared across the week for variety
+  return split.map((kind, i) =>
+    buildDay(kind, phaseKey, equipment, weakness, position, days[i] ?? 'MON', used));
+}
+
+// Halve-ish the set count for a deload, keeping reps (intensity) intact.
+function deloadSets(sets) {
+  const n = Number(sets);
+  if (Number.isNaN(n)) return sets;
+  return String(Math.max(1, Math.round(n * 0.6)));
+}
+
+// A 1-week deload mirroring the block it follows, with volume cut ~40%.
+function deloadPhase(fromPhase, week) {
   return {
-    day: weekday,
-    label: def.label,
-    focus: def.focus,
-    coachNote: def.note,
-    exercises,
+    name: 'DELOAD', label: 'Deload — recover & adapt',
+    weeks: { start: week, end: week }, weeksLabel: `Week ${week}`,
+    color: '#6EE7B7', deload: true,
+    coachNote: 'Planned recovery week: same exercises, ~40% less volume (drop a set or two), intensity held. This is where the previous block’s work becomes adaptation — don’t skip it.',
+    days: fromPhase.days.map((d) => ({
+      ...d,
+      coachNote: 'Deload — cut the volume, keep it crisp.',
+      exercises: d.exercises.map((e) => ({ ...e, id: genId(), sets: deloadSets(e.sets) })),
+    })),
   };
 }
 
-function buildDays(split, phaseKey, equipment, weakness) {
-  const days = WEEKDAYS[split.length] ?? WEEKDAYS[4];
-  return split.map((kind, i) => buildDay(kind, phaseKey, equipment, weakness, days[i] ?? 'MON'));
-}
+const PHASE_META = [
+  { key: 'base',     label: 'Base — Build the engine',    color: '#5BF0A5', deloadAfter: true },
+  { key: 'strength', label: 'Strength — The foundation',  color: '#F59E0B', deloadAfter: true },
+  { key: 'speed',    label: 'Power & Speed — Convert it',  color: '#A78BFA', deloadAfter: false },
+];
 
-// Phase definitions for a linear build. Off-season front-loads the base.
-function linearPhases(seasonPhase) {
-  if (seasonPhase === 'off') {
-    return [
-      { key: 'base',     name: 'PHASE 1', label: 'Base — Build the engine',  weeks: { start: 1, end: 4 },  color: '#5BF0A5' },
-      { key: 'strength', name: 'PHASE 2', label: 'Strength — The foundation', weeks: { start: 5, end: 8 },  color: '#F59E0B' },
-      { key: 'speed',    name: 'PHASE 3', label: 'Power & Speed — Convert it', weeks: { start: 9, end: 12 }, color: '#A78BFA' },
-    ];
-  }
-  // pre-season: classic 10-week arc
-  return [
-    { key: 'base',     name: 'PHASE 1', label: 'Base — Build the engine',  weeks: { start: 1, end: 3 },  color: '#5BF0A5' },
-    { key: 'strength', name: 'PHASE 2', label: 'Strength — The foundation', weeks: { start: 4, end: 6 },  color: '#F59E0B' },
-    { key: 'speed',    name: 'PHASE 3', label: 'Power & Speed — Convert it', weeks: { start: 7, end: 10 }, color: '#A78BFA' },
-  ];
+// Build the full linear phase list, interleaving a deload week after each build
+// block. Off-season runs longer blocks than pre-season.
+function buildLinearPhases(seasonPhase, daysPerWeek, equipment, weakness, position) {
+  const lengths = seasonPhase === 'off' ? [4, 4, 4] : [3, 3, 4];
+  const splits = PHASE_SPLITS[daysPerWeek] ?? PHASE_SPLITS[4];
+  const phases = [];
+  let week = 1;
+
+  PHASE_META.forEach((m, i) => {
+    const len = lengths[i];
+    const start = week;
+    const end = week + len - 1;
+    phases.push({
+      name: `PHASE ${i + 1}`, label: m.label,
+      weeks: { start, end }, weeksLabel: `Weeks ${start}–${end}`, color: m.color,
+      days: buildDays(splits[m.key], m.key, equipment, weakness, position),
+    });
+    week = end + 1;
+    if (m.deloadAfter) {
+      phases.push(deloadPhase(phases.at(-1), week));
+      week += 1;
+    }
+  });
+
+  return phases;
 }
 
 const SEASON_LABEL = { off: 'Off-Season', pre: 'Pre-Season', in: 'In-Season' };
@@ -230,20 +307,22 @@ function buildCoachNotes({ seasonPhase, daysPerWeek, position, weakness }) {
     );
   } else {
     notes.push(
-      `${daysPerWeek}-day ${SEASON_LABEL[seasonPhase].toLowerCase()} build. It moves through three phases — base, strength, then power & speed — because each one sets up the next: the strength you build in the middle is what you later convert into explosive speed. Add a little load, a rep or a set across each phase, then deload before the next.`,
+      `${daysPerWeek}-day ${SEASON_LABEL[seasonPhase].toLowerCase()} build. It moves through three phases — base, strength, then power & speed — and each one genuinely shifts: the base phase carries more conditioning and higher reps, the speed phase adds sprint/power volume and trims strength volume so you peak rather than just grind.`,
     );
     notes.push(
-      'Day order is deliberate: speed and power sit on fresh days, and conditioning is kept away from heavy lifting so the two don’t blunt each other (the interference effect). Always do the fast, explosive work first while you’re fresh.',
+      'A deload week is built in after the base and strength blocks: same lifts, ~40% less volume, intensity held. That’s when the work turns into adaptation — it is part of the plan, not a break from it.',
+    );
+    notes.push(
+      'Day order is deliberate: speed and power sit on fresh days, and conditioning is kept away from heavy lifting so the two don’t blunt each other (the interference effect). Always do the fast, explosive work first.',
     );
   }
   if (weakness === 'aerobic') {
-    notes.push('Aerobic flagged as a weakness — an extra conditioning emphasis is built in. Keep it off your speed and strength days.');
+    notes.push('Aerobic flagged as a weakness — extra conditioning is built into the base phase. Keep it off your speed and strength days.');
   } else if (weakness && WEAKNESS_PREHAB[weakness]) {
     notes.push(`Targeting your ${weakness} weak point with extra prehab woven into the relevant days. Don’t skip it — it’s the insurance that keeps you on the pitch.`);
   }
-  if (position) {
-    notes.push(`Tuned for a ${position}. Adjust exercise selection and volume to your own response — two players on the same plan recover differently.`);
-  }
+  const pos = POSITION_EMPHASIS[position];
+  if (pos) notes.push(pos.note);
   return notes;
 }
 
@@ -267,13 +346,13 @@ export function generateProgram(inputs) {
     weakness = null,
   } = inputs;
 
-  const split = SPLITS[daysPerWeek] ?? SPLITS[4];
   const coachNotes = buildCoachNotes({ seasonPhase, daysPerWeek, position, weakness });
   const name = `${SEASON_LABEL[seasonPhase]} — ${daysPerWeek}-Day`;
 
   if (seasonPhase === 'in') {
     // Repeating maintenance week: trim each day to its essentials.
-    const days = buildDays(split, 'inseason', equipment, weakness).map((d) => ({
+    const split = (PHASE_SPLITS[daysPerWeek] ?? PHASE_SPLITS[4]).strength;
+    const days = buildDays(split, 'inseason', equipment, weakness, position).map((d) => ({
       ...d,
       exercises: d.exercises.slice(0, 4),
     }));
@@ -292,18 +371,13 @@ export function generateProgram(inputs) {
     };
   }
 
-  const phases = linearPhases(seasonPhase).map((p) => ({
-    name: p.name,
-    label: p.label,
-    weeks: p.weeks,
-    weeksLabel: `Weeks ${p.weeks.start}–${p.weeks.end}`,
-    color: p.color,
-    days: buildDays(split, p.key, equipment, weakness),
-  }));
-
   return {
     id: '', name, type: 'linear', color: SEASON_COLOR[seasonPhase],
     start_date: null, end_date: null,
-    structure: { focusColors: DEFAULT_FOCUS_COLORS, coachNotes, phases },
+    structure: {
+      focusColors: DEFAULT_FOCUS_COLORS,
+      coachNotes,
+      phases: buildLinearPhases(seasonPhase, daysPerWeek, equipment, weakness, position),
+    },
   };
 }
