@@ -14,6 +14,7 @@ const GuideSection = lazy(() => import('./components/GuideSection'));
 const ProgressSection = lazy(() => import('./components/ProgressSection'));
 const NutritionSection = lazy(() => import('./components/NutritionSection'));
 const RecoverySection = lazy(() => import('./components/RecoverySection'));
+const RoutinesSection = lazy(() => import('./components/RoutinesSection'));
 
 // needsUser: passes the authed userId to sections that still own per-user data
 // hooks (logs, readiness, progress). Plan/today data no longer needs it — it
@@ -25,6 +26,7 @@ const SECTIONS = [
   { id: 'progress', label: 'Progress',  icon: '📈', Component: ProgressSection,  needsUser: true },
   { id: 'food',     label: 'Nutrition', icon: '🥗', Component: NutritionSection, needsUser: false },
   { id: 'recovery', label: 'Recovery',  icon: '🔋', Component: RecoverySection,  needsUser: true },
+  { id: 'routines', label: 'Routines',  icon: '🧘', Component: RoutinesSection,  needsUser: true },
 ];
 
 function AppInner() {
