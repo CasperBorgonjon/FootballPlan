@@ -1049,7 +1049,60 @@ input { font-family: inherit; }
   font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--text); padding-top: 2px;
 }
-.rec-item-desc { font-size: 13px; line-height: 1.55; color: var(--text-2); flex: 1; }
+.rec-item-body { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; min-width: 0; }
+.rec-item-desc { font-size: 13px; line-height: 1.55; color: var(--text-2); }
+.rec-item-when {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--text-2); background: var(--panel); border: 1px solid var(--line);
+  padding: 3px 9px; border-radius: 100px; white-space: nowrap;
+}
+
+/* Today's recovery — contextual, checkable action list (the "do this now" layer) */
+.rec-today {
+  background: var(--panel); border: 1px solid var(--line);
+  border-left: 3px solid var(--accent); border-radius: var(--r);
+  overflow: hidden;
+}
+.rec-today-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 13px 18px 11px; border-bottom: 1px solid var(--line);
+}
+.rec-today-title { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
+.rec-today-count { font-size: 11px; font-weight: 600; color: var(--text-3); }
+.rec-today-list { display: flex; flex-direction: column; }
+.rec-action {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 18px; border-bottom: 1px solid var(--line);
+}
+.rec-action:last-child { border-bottom: none; }
+.rec-action-check {
+  width: 22px; height: 22px; flex-shrink: 0; margin-top: 1px;
+  border: 1.5px solid var(--line-strong); background: none;
+  border-radius: 7px; display: grid; place-items: center;
+  font-size: 12px; color: var(--accent-ink); padding: 0;
+  transition: border-color .15s, background .15s;
+}
+.rec-action-check:hover { border-color: var(--text-2); }
+.rec-action-check.is-done { background: var(--accent); border-color: var(--accent); }
+.rec-action-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.rec-action-text { font-size: 14px; font-weight: 600; letter-spacing: -0.005em; }
+.rec-action-detail { font-size: 12px; line-height: 1.45; color: var(--text-2); }
+.rec-action.is-done .rec-action-text { text-decoration: line-through; color: var(--text-3); }
+.rec-action.is-done .rec-action-detail { color: var(--text-3); }
+.rec-action-flag {
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em;
+  color: var(--danger, #F87171); border: 1px solid currentColor;
+  padding: 1px 6px; border-radius: 5px; margin-right: 7px; vertical-align: middle;
+}
+.rec-action.is-avoid { border-left: 3px solid var(--danger, #F87171); padding-left: 15px; }
+.rec-action.is-avoid .rec-action-check { color: var(--danger, #F87171); }
+.rec-action.is-avoid .rec-action-check.is-done { background: var(--danger, #F87171); border-color: var(--danger, #F87171); color: var(--accent-ink); }
+.rec-action-jump {
+  flex-shrink: 0; background: none; border: none; padding: 4px 6px;
+  font-size: 15px; color: var(--text-3); align-self: center;
+  transition: color .15s;
+}
+.rec-action-jump:hover { color: var(--accent); }
 
 /* Daily routines — checkable step-throughs (reuse ex-row for the steps) */
 .routine-groups { display: flex; flex-direction: column; gap: 16px; }
