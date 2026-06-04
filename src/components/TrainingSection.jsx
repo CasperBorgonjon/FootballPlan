@@ -10,6 +10,7 @@ import {
   suggestedRest, restLabel, suggestProgression,
 } from '../utils/coaching';
 import { equipmentInfo, isFullKit } from '../data/equipment';
+import { normalizeDecimal } from '../utils/decimal';
 import RestTimer from './RestTimer';
 import PlateCalculator from './PlateCalculator';
 
@@ -41,10 +42,10 @@ function ReadinessCard({ userId, date, programType, match }) {
           <span>Sleep</span>
           <div className="rd-sleep">
             <input
-              type="number" min="0" max="14" step="0.5" inputMode="decimal"
+              type="text" inputMode="decimal"
               value={checkin?.sleep_hours ?? ''}
               placeholder="—"
-              onChange={(e) => save({ sleep_hours: e.target.value })}
+              onChange={(e) => save({ sleep_hours: normalizeDecimal(e.target.value) })}
             />
             <i>h</i>
           </div>
@@ -150,12 +151,14 @@ function ExerciseRow({ ex, week, log, tracked, accent, restSec, equip, last, lev
             <div className="ex-log-inputs">
               <input
                 className="ex-log-input" placeholder="kg"
+                inputMode="decimal"
                 value={entry?.weight || ''}
-                onChange={(e) => updateEntry(week, ex.id, { weight: e.target.value })}
+                onChange={(e) => updateEntry(week, ex.id, { weight: normalizeDecimal(e.target.value) })}
                 autoFocus
               />
               <input
                 className="ex-log-input" placeholder="reps"
+                inputMode="numeric"
                 value={entry?.reps || ''}
                 onChange={(e) => updateEntry(week, ex.id, { reps: e.target.value })}
               />

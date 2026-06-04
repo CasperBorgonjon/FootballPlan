@@ -1220,6 +1220,19 @@ input { font-family: inherit; }
 
 /* ════════════ Responsive ════════════ */
 @media (max-width: 760px) {
+  /* iOS auto-zooms any input whose font-size is < 16px on focus. Bump every
+     control to 16px on phones so focusing a field never zooms (and never
+     leaves the layout scrolled offscreen when the keyboard dismisses). */
+  input, select, textarea,
+  .editor input[type=text], .editor input[type=number], .editor select, .editor textarea,
+  .calc-field input, .rd-sleep input, .plate-field input, .metric-log input,
+  .ex-log-input, .mb-search, .picker-search, .login-input {
+    font-size: 16px !important;
+  }
+  /* Segmented controls hold long labels ("Build muscle", "Lean & build") that
+     overflow the viewport on narrow screens — let them wrap instead. */
+  .calc-seg, .edit-seg, .rd-seg, .gen-seg { flex-wrap: wrap; }
+
   .page-content { padding: 20px 16px 90px; }
   .status-program { font-size: 19px; }
   .day-title { font-size: 25px; }

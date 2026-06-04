@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ACTIVITY_LEVELS, GOALS, SEXES, findActivity, findGoal } from '../utils/calories';
+import { normalizeDecimal } from '../utils/decimal';
 
 // Body-stats form that drives the personalised macro targets. Reads/writes the
 // stored profile through the props handed down from NutritionSection. Collapses
@@ -10,8 +11,10 @@ export default function NutritionCalculator({ profile, updateProfile, resetProfi
   const hasInput = profile.age || profile.height || profile.weight;
 
   const num = (key) => (e) => {
-    const v = e.target.value;
-    updateProfile({ [key]: v === '' ? '' : Math.max(0, Number(v)) });
+    const v = normalizeDecimal(e.target.value);
+    if (v === '') return updateProfile({ [key]: '' });
+    const n = Number(v);
+    if (Number.isFinite(n)) updateProfile({ [key]: Math.max(0, n) });
   };
 
   return (
@@ -43,7 +46,7 @@ export default function NutritionCalculator({ profile, updateProfile, resetProfi
             </label>
             <label className="calc-field">
               <span>Weight</span>
-              <input type="number" inputMode="numeric" value={profile.weight}
+              <input type="text" inputMode="decimal" value={profile.weight}
                 onChange={num('weight')} placeholder="kg" />
             </label>
           </div>
@@ -75,7 +78,7 @@ export default function NutritionCalculator({ profile, updateProfile, resetProfi
 
           <div className="calc-field">
             <span>Goal</span>
-            <div className="calc-seg">
+            <div className="calc-seg calc-seg--wrap">
               {GOALS.map((g) => (
                 <button key={g.id} className={profile.goal === g.id ? 'is-on' : ''}
                   onClick={() => updateProfile({ goal: g.id })}>

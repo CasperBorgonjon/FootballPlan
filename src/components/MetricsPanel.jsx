@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMetrics } from '../hooks/useMetrics';
 import Sparkline from './Sparkline';
+import { normalizeDecimal } from '../utils/decimal';
 
 // The reference's test-week metrics + daily bodyweight. lower=true means a
 // smaller number is better (sprint time).
@@ -38,10 +39,10 @@ function MetricCard({ def, history, onSave }) {
       </div>
       <div className="metric-log">
         <input
-          type="number" step={def.step} inputMode="decimal"
+          type="text" inputMode="decimal"
           placeholder={`Today (${def.unit})`}
           value={val}
-          onChange={(e) => setVal(e.target.value)}
+          onChange={(e) => setVal(normalizeDecimal(e.target.value))}
           onKeyDown={(e) => e.key === 'Enter' && submit()}
         />
         <button className="mini-btn" onClick={submit}>Log</button>

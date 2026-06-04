@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { platesPerSide, groupPlates, warmupRamp } from '../utils/plates';
+import { normalizeDecimal } from '../utils/decimal';
 
 // In-gym helper: type a working weight, see what to load per side of the bar
 // and a quick warm-up ramp. Pure UI over utils/plates — no backend.
@@ -25,8 +26,8 @@ export default function PlateCalculator({ initialWeight = '', onClose }) {
           <label className="plate-field">
             <span>Working weight</span>
             <input
-              type="number" inputMode="decimal" autoFocus
-              value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="kg"
+              type="text" inputMode="decimal" autoFocus
+              value={weight} onChange={(e) => setWeight(normalizeDecimal(e.target.value))} placeholder="kg"
             />
           </label>
           <label className="plate-field">
