@@ -1,21 +1,25 @@
-// Shared top/bottom nav. Section list comes from App's section registry.
-export default function MainNav({ sections, active, onSelect, variant }) {
+// Primary navigation. Renders the five top-level hubs (Train, Plan, Fuel, Body,
+// Progress) — the hub list comes from App's group registry. `active` is the id
+// of the hub the current section belongs to. Same component drives the desktop
+// top bar and the mobile bottom bar.
+export default function MainNav({ groups, active, onSelect, variant }) {
   const isBottom = variant === 'bottom';
   return (
     <nav className={`main-nav main-nav--${variant}`}>
-      {sections.map((s) => (
+      {groups.map((g) => (
         <button
-          key={s.id}
-          className={active === s.id ? 'active' : ''}
-          onClick={() => onSelect(s.id)}
+          key={g.id}
+          className={active === g.id ? 'active' : ''}
+          onClick={() => onSelect(g.id)}
+          aria-current={active === g.id ? 'page' : undefined}
         >
           {isBottom ? (
             <>
-              <span className="bottom-nav-icon">{s.icon}</span>
-              <span className="bottom-nav-label">{s.label}</span>
+              <span className="bottom-nav-icon">{g.icon}</span>
+              <span className="bottom-nav-label">{g.label}</span>
             </>
           ) : (
-            <>{s.icon} {s.label}</>
+            <>{g.icon} {g.label}</>
           )}
         </button>
       ))}

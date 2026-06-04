@@ -4,9 +4,11 @@
 // data); per-user completion is tracked daily in localStorage (see
 // useRoutineLog), not here.
 //
-// A routine: { id, name, icon, accent, when, blurb, steps }
+// A routine: { id, name, icon, accent, cadence, when, blurb, steps }
 // A step:    { name, detail, time }   ← `time` is a short prescription label
 //
+// `cadence` groups the routines in the UI so it's obvious which are everyday
+// habits ('daily') and which hang off a training session ('session').
 // `accent` values come from the focus palette in src/data/domain.js so the page
 // reads in the same colours as the rest of the app.
 
@@ -16,6 +18,7 @@ export const routines = [
     name: 'Morning Mobility',
     icon: '🌅',
     accent: '#6EE7B7',
+    cadence: 'daily',
     when: 'On waking, daily',
     blurb: 'Wake the joints up and undo the night. Six minutes, every day — the cheapest performance gain you have.',
     steps: [
@@ -31,6 +34,7 @@ export const routines = [
     name: 'Pre-Training Warm-Up',
     icon: '🔥',
     accent: '#FB923C',
+    cadence: 'session',
     when: 'Before every session & match',
     blurb: 'RAMP it up — raise the heart rate, activate, mobilise, potentiate. Never train or play cold.',
     steps: [
@@ -46,6 +50,7 @@ export const routines = [
     name: 'Prehab Circuit',
     icon: '🦵',
     accent: '#F87171',
+    cadence: 'session',
     when: 'Training days (or 3×/week)',
     blurb: 'Injury insurance for the parts that keep a footballer off the pitch: hamstrings, groin, calves. Non-negotiable.',
     steps: [
@@ -61,6 +66,7 @@ export const routines = [
     name: 'Post-Session Flush',
     icon: '🧊',
     accent: '#38BDF8',
+    cadence: 'session',
     when: 'After training & matches',
     blurb: 'Bring the system down and start recovery now, not tomorrow. Light and brief — don’t add fatigue.',
     steps: [
@@ -76,6 +82,7 @@ export const routines = [
     name: 'Evening Wind-Down',
     icon: '🌙',
     accent: '#A78BFA',
+    cadence: 'daily',
     when: 'Before bed',
     blurb: 'Prime sleep — the biggest recovery lever there is. Calm the nervous system and lengthen what training shortened.',
     steps: [

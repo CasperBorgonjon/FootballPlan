@@ -109,6 +109,23 @@ input { font-family: inherit; }
   padding: 28px var(--gutter) 96px;
 }
 
+/* Secondary nav — switches the section inside a multi-section hub. Segmented
+   control so it reads one level below the hub bar and above in-content pills. */
+.sub-nav {
+  display: inline-flex; gap: 4px; align-self: flex-start;
+  margin-bottom: 22px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 4px;
+}
+.sub-nav-tab {
+  background: none; border: none;
+  padding: 9px 20px; border-radius: var(--r-sm);
+  font-size: 13px; font-weight: 600; color: var(--text-2);
+  transition: background .15s, color .15s;
+}
+.sub-nav-tab:hover { color: var(--text); }
+.sub-nav-tab.is-active { background: var(--accent-dim); color: var(--accent); }
+
 /* Section wrappers — vertical rhythm + reveal */
 .section, .section-content {
   display: flex; flex-direction: column; gap: 18px;
@@ -872,6 +889,12 @@ input { font-family: inherit; }
 .rec-item-desc { font-size: 13px; line-height: 1.55; color: var(--text-2); flex: 1; }
 
 /* Daily routines — checkable step-throughs (reuse ex-row for the steps) */
+.routine-groups { display: flex; flex-direction: column; gap: 16px; }
+.routine-group { display: flex; flex-direction: column; gap: 9px; }
+.routine-group-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-3);
+}
 .routine-when {
   font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
   color: var(--text-3); margin-top: 4px;
@@ -1019,14 +1042,17 @@ input { font-family: inherit; }
   }
   .main-nav--bottom button {
     flex: 1; min-width: 0; background: none; border: none;
-    padding: 11px 4px 9px; color: var(--text-3);
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 10px 4px 8px; color: var(--text-3);
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
     border-top: 2px solid transparent;
   }
   .main-nav--bottom button.active { color: var(--text); border-top-color: var(--accent); }
-  .bottom-nav-icon { font-size: 17px; line-height: 1; }
+  .bottom-nav-icon { font-size: 19px; line-height: 1; }
   .bottom-nav-label {
-    font-size: 9px; font-weight: 700; letter-spacing: 0.02em;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.01em;
     max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
+  /* Sub-nav stretches full width and stays tappable on phones */
+  .sub-nav { display: flex; align-self: stretch; margin-bottom: 18px; }
+  .sub-nav-tab { flex: 1; text-align: center; padding: 10px 12px; }
 }

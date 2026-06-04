@@ -23,6 +23,14 @@ function suggestRoutine(today, level) {
   return { id: 'morning', title: 'Start the day right', text: 'Six minutes of mobility before anything else.' };
 }
 
+// The two ways a routine recurs. Splitting the selector along this line is the
+// whole point of the page: at a glance you can see what you do every day vs.
+// what hangs off a training session.
+const CADENCE_GROUPS = [
+  { id: 'daily',   label: 'Every day' },
+  { id: 'session', label: 'Around sessions' },
+];
+
 function StepRow({ routineId, index, step, done, accent, onToggle }) {
   return (
     <div className={`ex-row${done ? ' is-done' : ''}`}>
@@ -83,14 +91,25 @@ export default function RoutinesSection({ userId }) {
         )}
       </div>
 
-      <div className="rec-tabs">
-        {routines.map((r) => {
-          const n = completedCount(r.id, r.steps.length);
-          const full = n === r.steps.length;
+      <div className="routine-groups">
+        {CADENCE_GROUPS.map((group) => {
+          const inGroup = routines.filter((r) => r.cadence === group.id);
+          if (inGroup.length === 0) return null;
           return (
-            <Pill key={r.id} active={activeId === r.id} onClick={() => setActiveId(r.id)}>
-              {r.icon} {r.name} {full ? '✓' : n > 0 ? `· ${n}/${r.steps.length}` : ''}
-            </Pill>
+            <div className="routine-group" key={group.id}>
+              <div className="routine-group-label">{group.label}</div>
+              <div className="rec-tabs">
+                {inGroup.map((r) => {
+                  const n = completedCount(r.id, r.steps.length);
+                  const full = n === r.steps.length;
+                  return (
+                    <Pill key={r.id} active={activeId === r.id} onClick={() => setActiveId(r.id)}>
+                      {r.icon} {r.name} {full ? '✓' : n > 0 ? `· ${n}/${r.steps.length}` : ''}
+                    </Pill>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
       </div>
