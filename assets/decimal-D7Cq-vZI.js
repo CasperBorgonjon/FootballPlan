@@ -1,0 +1,1 @@
+var e=e=>String(e).replace(`,`,`.`);export{e as t};
